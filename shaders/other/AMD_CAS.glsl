@@ -1,4 +1,4 @@
-// 文档 https://github.com/hooke007/mpv_PlayKit/wiki/4_GLSL
+// Documentation : https://github.com/hooke007/mpv_PlayKit/wiki/4_GLSL
 
 /*
 

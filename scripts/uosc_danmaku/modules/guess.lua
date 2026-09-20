@@ -1,6 +1,6 @@
 local unpack = unpack or table.unpack
 
--- Clean up media name
+-- Nettoie le nom du média
 local function clean_name(name)
     return name:gsub("^%[.-%]", " ")
            :gsub("^%(.-%)", " ")
@@ -13,7 +13,7 @@ local function clean_name(name)
            :gsub("[!@#%.%?%+%-%%&*_=,/~`]+$", "")
 end
 
--- Formatters for media titles
+-- Fonctions de mise en forme des titres
 local formatters = {
     {
         regex = "^(.-)%s*[_%-%.%s]%s*第%s*(%d+)%s*[季部]+%s*[_%-%.%s]%s*第%s*(%d+[%.v]?%d*)%s*[话集回]",
@@ -147,7 +147,7 @@ local formatters = {
     },
 }
 
--- Format filename based on regex patterns
+-- Formate le nom de fichier à l'aide des motifs
 function format_filename(title)
     for _, formatter in ipairs(formatters) do
         local matches = {title:match(formatter.regex)}

@@ -1,6 +1,6 @@
--- taken from https://github.com/rkscv/danmaku/blob/main/danmaku.lua
--- modified from https://bitop.luajit.org/download.html (LuaBitOp-1.0.2 / md5test.lua)
--- and https://github.com/kikito/md5.lua/blob/master/md5.lua
+-- Tiré de https://github.com/rkscv/danmaku/blob/main/danmaku.lua
+-- Adapté de https://bitop.luajit.org/download.html (LuaBitOp-1.0.2 / md5test.lua)
+-- et de https://github.com/kikito/md5.lua/blob/master/md5.lua
 -- SPDX-License-Identifier:MIT
 
 local byte, char, sub, rep = string.byte, string.char, string.sub, string.rep

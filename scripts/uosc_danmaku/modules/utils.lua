@@ -1,7 +1,7 @@
 local utils = require("mp.utils")
 local unpack = unpack or table.unpack
 
--- from http://lua-users.org/wiki/LuaUnicode
+-- D'après http://lua-users.org/wiki/LuaUnicode
 local UTF8_PATTERN = '[%z\1-\127\194-\244][\128-\191]*'
 
 function positive_integer(value, fallback)
@@ -9,8 +9,8 @@ function positive_integer(value, fallback)
     return math.max(1, value)
 end
 
--- return a substring based on utf8 characters
--- like string.sub, but negative index is not supported
+-- Renvoie une sous-chaîne fondée sur les caractères UTF-8.
+-- Semblable à string.sub, mais sans indice négatif.
 function utf8_sub(s, i, j)
     if i > j then
         return s
@@ -48,7 +48,7 @@ function utf8_to_table(s)
     return t
 end
 
--- abbreviate string if it's too long
+-- Abrège une chaîne trop longue
 function abbr_str(str, length)
     if not str or str == '' then return '' end
     local str_clip = utf8_sub(str, 1, length)
@@ -183,13 +183,13 @@ function jaro_winkler(s1, s2)
     return d + l * p * (1 - d)
 end
 
--- 从时间字符串转换为秒数
+-- Convertit une durée textuelle en secondes
 function time_to_seconds(time_str)
     local h, m, s = time_str:match("(%d+):(%d+):([%d%.]+)")
     return tonumber(h) * 3600 + tonumber(m) * 60 + tonumber(s)
 end
 
--- 从秒数转换为时间字符串
+-- Convertit des secondes en durée textuelle
 function seconds_to_time(seconds)
     local hours = math.floor(seconds / 3600)
     local minutes = math.floor((seconds % 3600) / 60)
@@ -229,18 +229,18 @@ function hex_to_char(x)
 end
 
 function hex_to_int_color(hex_color)
-    -- 移除颜色代码中的'#'字符
-    hex_color = hex_color:sub(2)  -- 只保留颜色代码部分
+    -- Retire le caractère « # » du code couleur
+    hex_color = hex_color:sub(2)  -- Ne conserve que le code couleur
     if not hex_color:match("^%x%x%x%x%x%x$") then
         return 16777215
     end
 
-    -- 提取R, G, B的十六进制值并转为整数
+    -- Extrait les composantes hexadécimales R, V et B et les convertit en entiers
     local r = tonumber(hex_color:sub(1, 2), 16)
     local g = tonumber(hex_color:sub(3, 4), 16)
     local b = tonumber(hex_color:sub(5, 6), 16)
 
-    -- 计算32位整数值
+    -- Calcule la valeur entière sur 32 bits
     local color_int = (r * 256 * 256) + (g * 256) + b
 
     return color_int
@@ -256,9 +256,9 @@ function color_dist(c1, c2)
     return math.sqrt((r1-r2)^2 + (g1-g2)^2 + (b1-b2)^2)
 end
 
--- url编码转换
+-- Encode une URL
 function url_encode(str)
-    -- 将非安全字符转换为百分号编码
+    -- Encode en pourcentage les caractères non sûrs
     if str then
         str = str:gsub("([^%w%-%.%_%~])", function(c)
             return string.format("%%%02X", string.byte(c))
@@ -267,7 +267,7 @@ function url_encode(str)
     return str
 end
 
--- url解码转换
+-- Décode une URL
 function url_decode(str)
     if str ~= nil then
         str = str:gsub('^%a[%a%d-_]+://', '')
@@ -282,7 +282,7 @@ function url_decode(str)
     end
 end
 
--- Utility function to split a string by a delimiter
+-- Fonction utilitaire qui découpe une chaîne selon un séparateur
 function split(str, delim)
     local result = {}
     for match in (str .. delim):gmatch("(.-)" .. delim) do
@@ -444,7 +444,7 @@ function contains_any(tab, val)
     return false
 end
 
--- 将一个逗号分隔的 api_server 字符串解析为有序列表
+-- Analyse une chaîne api_server séparée par des virgules en liste ordonnée
 function get_api_server_list(api_server_str, meta)
     local want_meta = meta or false
     local metas = {}
@@ -480,18 +480,18 @@ function get_api_server_list(api_server_str, meta)
     return urls
 end
 
---读history 和 写history
+--Lecture et écriture de l'historique
 function read_file(file_path)
-    local file = io.open(file_path, "r") -- 打开文件，"r"表示只读模式
+    local file = io.open(file_path, "r") -- Ouvre le fichier ; « r » signifie lecture seule
     if not file then
         return nil
     end
-    local content = file:read("*all") -- 读取文件所有内容
-    file:close()                      -- 关闭文件
+    local content = file:read("*all") -- Lit tout le contenu du fichier
+    file:close()                      -- Ferme le fichier
     return content
 end
 
--- 应用额外的自定义标题替换规则
+-- Applique les règles supplémentaires de remplacement du titre
 function title_replace(title)
     local title_replace = utils.parse_json(options.title_replace)
     if not title_replace then
@@ -515,11 +515,11 @@ function write_json_file(file_path, data)
     if not file then
         return
     end
-    file:write(utils.format_json(data)) -- 将 Lua 表转换为 JSON 并写入
+    file:write(utils.format_json(data)) -- Convertit la table Lua en JSON et l'écrit
     file:close()
 end
 
--- 拆分字符串中的字符和数字
+-- Sépare les caractères et les chiffres d'une chaîne
 local function split_by_numbers(filename)
     local parts = {}
     local pattern = "([^%d]*)(%d+)([^%d]*)"
@@ -529,7 +529,7 @@ local function split_by_numbers(filename)
     return parts
 end
 
--- 识别匹配前后剧集并提取集数
+-- Compare les titres et extrait le numéro d'épisode
 local function get_series_episodes(fname1, fname2)
     local parts1 = split_by_numbers(fname1)
     local parts2 = split_by_numbers(fname2)
@@ -545,22 +545,22 @@ local function get_series_episodes(fname1, fname2)
 
     local min_len = math.min(#parts1, #parts2)
 
-    -- 逐个部分进行比较
+    -- Compare chaque partie
     for i = 1, min_len do
         local part1 = parts1[i]
         local part2 = parts2[i]
 
-        -- 比较数字前的字符是否相同
+        -- Compare les caractères précédant le nombre
         if part1.pre ~= part2.pre then
             return nil, nil
         end
 
-        -- 比较数字部分
+        -- Compare la partie numérique
         if part1.num ~= part2.num then
             return part1.num, part2.num
         end
 
-        -- 比较数字后的字符是否相同
+        -- Compare les caractères suivant le nombre
         if part1.post ~= part2.post then
             return nil, nil
         end
@@ -569,9 +569,9 @@ local function get_series_episodes(fname1, fname2)
     return nil, nil
 end
 
--- 获取当前文件名所包含的集数
+-- Extrait le numéro d'épisode du nom de fichier actuel
 function get_episode_number(filename, fname)
-    -- 尝试对比记录文件名来获取当前集数
+    -- Tente d'obtenir le numéro actuel en comparant le nom enregistré
     if fname then
         return get_series_episodes(fname, filename)
     end
@@ -594,7 +594,7 @@ function get_episode_number(filename, fname)
     return nil
 end
 
--- 规范化路径
+-- Normalise le chemin
 function normalize(path)
     if normalize_path ~= nil then
         if normalize_path then
@@ -619,7 +619,7 @@ function normalize(path)
     return normalize(path)
 end
 
--- 获取父目录路径
+-- Renvoie le chemin du dossier parent
 function get_parent_directory(path)
     local dir = nil
     if path and not is_protocol(path) then
@@ -629,7 +629,7 @@ function get_parent_directory(path)
     return dir
 end
 
--- 获取播放文件标题信息
+-- Renvoie les informations de titre du fichier lu
 function parse_title()
     local path = mp.get_property("path")
     local filename = mp.get_property("filename/no-ext")
@@ -783,7 +783,7 @@ function number_to_chinese(num)
     return result
 end
 
--- 内部的异步运行计数
+-- Compteur interne d'opérations asynchrones
 local async_running_count = 0
 
 function mark_async_start()
@@ -800,10 +800,10 @@ function is_async_running()
     return async_running_count > 0
 end
 
--- 异步执行命令
--- 同时返回 abort 函数，用于取消异步命令
+-- Exécute une commande de façon asynchrone
+-- Renvoie aussi une fonction abort permettant d'annuler la commande
 function call_cmd_async(args, callback)
-    -- 标记异步开始
+    -- Marque le début de l'opération asynchrone
     mark_async_start()
 
     local abort_signal = mp.command_native_async({
@@ -813,7 +813,7 @@ function call_cmd_async(args, callback)
         playback_only = true,
         args = args,
     }, function(success, result, error)
-        -- 标记异步结束
+        -- Marque la fin de l'opération asynchrone
         mark_async_end()
 
         if not success or not result or result.status ~= 0 then
@@ -885,11 +885,11 @@ function await_call_cmd(args, timeout, on_start)
     return coroutine.yield()
 end
 
--- 并行请求调度器
+-- Ordonnanceur de requêtes parallèles
 -- servers: { "url1", "url2", ... }
 -- build_args_fn(server) -> args
 -- per_response_cb(server, err, stdout)
--- final_cb() 可选
+-- final_cb() facultatif
 -- opts: { concurrency=3, per_request_timeout=10 }
 function parallel_requests(servers, build_args_fn, per_response_cb, final_cb, opts)
     if type(final_cb) == 'table' and opts == nil then
@@ -907,7 +907,7 @@ function parallel_requests(servers, build_args_fn, per_response_cb, final_cb, op
     local idx = 1
     local monitor = nil
 
-    -- worker 协程
+    -- Coroutine de traitement
     local function worker()
         while true do
             if aborted then return end
@@ -933,7 +933,7 @@ function parallel_requests(servers, build_args_fn, per_response_cb, final_cb, op
                     end)
                 end)
 
-                -- 请求结束
+                -- Fin de la requête
                 if in_flight_abort[i] then
                     in_flight_abort[i] = nil
                     in_flight_count = in_flight_count - 1
@@ -950,7 +950,7 @@ function parallel_requests(servers, build_args_fn, per_response_cb, final_cb, op
         end
     end
 
-    -- 启动 worker
+    -- Démarre les traitements
     local workers = {}
     for i = 1, math.min(concurrency, #servers) do
         local co = coroutine.create(worker)
@@ -961,7 +961,7 @@ function parallel_requests(servers, build_args_fn, per_response_cb, final_cb, op
         workers[#workers + 1] = co
     end
 
-    -- monitor（完成检测）
+    -- Surveillance de la fin des traitements
     monitor = mp.add_periodic_timer(0.05, function()
         if aborted then
             monitor:kill()
@@ -977,7 +977,7 @@ function parallel_requests(servers, build_args_fn, per_response_cb, final_cb, op
         end
     end)
 
-    -- 返回取消函数
+    -- Renvoie la fonction d'annulation
     return function()
         if aborted then return end
         aborted = true

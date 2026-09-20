@@ -13,11 +13,11 @@ local input_loaded, input = pcall(require, "mp.input")
 local uosc_available = false
 
 local o = {
-    -- API token, 可以在 https://assrt.net 上注册账号后在个人界面获取
+    -- Jeton d'API, à récupérer dans l'espace personnel après inscription sur https://assrt.net
     api_token = "tNjXZUnOJWcHznHDyalNMYqqP6IdDdpQ",
-    -- 是否使用 https
+    -- Utiliser ou non https
     use_https = true,
-    -- 代理设置
+    -- Réglages du proxy
     proxy = "",
 }
 
@@ -104,7 +104,7 @@ local function http_request(url)
     if res.status == 0 then
         return utils.parse_json(res.stdout)
     else
-        msg.error("HTTP request failed: " .. res.stderr)
+        msg.error("Échec de la requête HTTP : " .. res.stderr)
         return nil
     end
 end
@@ -118,7 +118,7 @@ local function file_exists(path)
 end
 
 local function alphanumsort(a, b)
-    -- alphanum sorting for humans in Lua
+    -- tri alphanumérique naturel (lisible par un humain) en Lua
     -- http://notebook.kulchenko.com/algorithms/alphanumeric-natural-sorting-for-humans-in-lua
     local function padnum(d)
         local dec, n = string.match(d, "(%.?)0*(.+)")
@@ -180,7 +180,7 @@ local function clean_name(name)
            :gsub("[!@#%.%?%+%-%%&*_=,/~`]+$", "")
 end
 
--- Formatters for media titles
+-- Formateurs pour les titres de médias
 local formatters = {
     {
         regex = "^(.-)%s*[_%.%s]%s*(%d%d%d%d)[_%.%s]%d%d[_%.%s]%d%d%s*[_%.%s]?(.-)%s*[_%.%s]%d+[pPkKxXbBfF]",
@@ -331,10 +331,10 @@ local function download_file(url, fname)
         end
     end
 
-    local message = "正在下载字幕..."
+    local message = "Téléchargement du sous-titre..."
     local type = "download_subtitle"
-    local title = "字幕下载菜单"
-    local footnote = "使用 / 打开筛选"
+    local title = "Menu de téléchargement de sous-titres"
+    local footnote = "Utilisez / pour ouvrir le filtre"
     if uosc_available then
         update_menu_uosc(type, title, message, footnote)
     else
@@ -350,35 +350,35 @@ local function download_file(url, fname)
     if res.status == 0 then
         if file_exists(sub_path) then
             append_sub(sub_path)
-            local message = "字幕下载完成, 已载入"
+            local message = "Sous-titre téléchargé et chargé"
             if uosc_available then
                 update_menu_uosc(type, title, message, footnote)
-                -- 下载完字幕1.5秒后关闭面板
+                -- Fermer le panneau 1,5 seconde après la fin du téléchargement
                 mp.add_timeout(1.5, function()
                     mp.commandv("script-message-to", "uosc", "close-menu", "download_subtitle")
                 end)
             else
                 mp.osd_message(message, 3)
             end
-            msg.info("Subtitle downloaded: " .. sub_path)
+            msg.info("Sous-titre téléchargé : " .. sub_path)
         end
     else
-        local message = "字幕下载失败，查看控制台获取更多信息"
+        local message = "Échec du téléchargement du sous-titre, voir la console pour plus d'informations"
         if uosc_available then
             update_menu_uosc(type, title, message, footnote)
         else
             mp.osd_message(message, 3)
         end
-        msg.error("Failed to download file: " .. res.stderr)
+        msg.error("Échec du téléchargement du fichier : " .. res.stderr)
         return nil
     end
 end
 
 local function fetch_subtitle_details(sub_id)
-    local message = "正在加载字幕详细信息..."
+    local message = "Chargement des détails du sous-titre..."
     local type = "subtitle_details"
-    local title = "字幕下载菜单"
-    local footnote = "使用 / 打开筛选"
+    local title = "Menu de téléchargement de sous-titres"
+    local footnote = "Utilisez / pour ouvrir le filtre"
     if uosc_available then
         update_menu_uosc(type, title, message, footnote)
     else
@@ -388,20 +388,20 @@ local function fetch_subtitle_details(sub_id)
     local url = ASSRT_DETAIL_API .."?token=" .. o.api_token .. "&id=" .. (sub_id or 0)
     local res = http_request(url)
     if not res or res.status ~= 0 then
-        local message = "获取字幕详细信息失败，查看控制台获取更多信息"
+        local message = "Échec de la récupération des détails du sous-titre, voir la console pour plus d'informations"
         if uosc_available then
             update_menu_uosc(type, title, message, footnote)
         else
             mp.osd_message(message, 3)
         end
-        msg.error("Failed to fetch subtitle details: " .. (res and res.errmsg or "Unknown error"))
+        msg.error("Échec de la récupération des détails du sous-titre : " .. (res and res.errmsg or "Erreur inconnue"))
         return nil
     end
 
     local items = {}
     items[#items + 1] = {
         title = "..",
-        hint = "返回搜索结果",
+        hint = "Retour aux résultats de recherche",
         value = {
             "script-message-to",
             mp.get_script_name(),
@@ -457,11 +457,11 @@ end
 local function search_subtitles(pos, query)
     local items = {}
     local type = "menu_subtitle"
-    local title = "输入搜索内容"
-    local footnote = "使用enter或ctrl+enter进行搜索"
+    local title = "Saisissez votre recherche"
+    local footnote = "Utilisez entrée ou ctrl+entrée pour lancer la recherche"
     if pos ~= "has_details" and (query ~= cache.query or tonumber(pos) > 0) then
         local pos = tonumber(pos)
-        local message = "正在搜索字幕..."
+        local message = "Recherche de sous-titres..."
         local cmd = { "script-message-to", mp.get_script_name(), "search-subtitles-event", tostring(pos) }
         if uosc_available then
             update_menu_uosc(type, title, message, footnote, cmd, query)
@@ -472,13 +472,13 @@ local function search_subtitles(pos, query)
         local url = ASSRT_SEARCH_API .. "?token=" .. o.api_token .. "&q=" .. url_encode(query) .. "&no_muxer=1&pos=" .. pos
         local res = http_request(url)
         if not res or res.status ~= 0 then
-            local message = "搜索字幕失败，查看控制台获取更多信息"
+            local message = "Échec de la recherche de sous-titres, voir la console pour plus d'informations"
             if uosc_available then
                 update_menu_uosc(type, title, message, footnote, cmd, query)
             else
                 mp.osd_message(message, 3)
             end
-            msg.error("Failed to search subtitles: " .. (res and res.errmsg or "Unknown error"))
+            msg.error("Échec de la recherche de sous-titres : " .. (res and res.errmsg or "Erreur inconnue"))
             return nil
         end
 
@@ -486,19 +486,19 @@ local function search_subtitles(pos, query)
         local subs = {}
         if sub then subs = res.sub.subs end
         if #subs == 0 then
-            local message = "未找到字幕，建议更改关键字尝试重新搜索"
+            local message = "Aucun sous-titre trouvé, essayez de modifier les mots-clés"
             if uosc_available then
                 update_menu_uosc(type, title, message, footnote, cmd, query)
             else
                 mp.osd_message(message, 3)
             end
-            msg.info("No subtitles found.")
+            msg.info("Aucun sous-titre trouvé.")
             return nil
         end
 
         table.insert(items, {
             title = "..",
-            hint = "返回搜索菜单",
+            hint = "Retour au menu de recherche",
             value = {
                 "script-message-to",
                 mp.get_script_name(),
@@ -525,7 +525,7 @@ local function search_subtitles(pos, query)
         if #items == 16 then
             pos = pos + 15
             table.insert(items, {
-                title = "加载下一页",
+                title = "Charger la page suivante",
                 value = {
                     "script-message-to",
                     mp.get_script_name(),
@@ -561,7 +561,7 @@ function open_menu_select(menu_items)
     end
     mp.commandv('script-message-to', 'console', 'disable')
     input.select({
-        prompt = '筛选:',
+        prompt = 'Filtrer :',
         items = item_titles,
         submit = function(id)
             mp.commandv(unpack(item_values[id]))
@@ -572,7 +572,7 @@ end
 function open_input_menu_get(pos, query)
     mp.commandv('script-message-to', 'console', 'disable')
     input.get({
-        prompt = '搜索字幕:',
+        prompt = 'Rechercher des sous-titres :',
         default_text = query,
         cursor_position = query and #query + 1,
         submit = function(text)
@@ -585,7 +585,7 @@ end
 function open_input_menu_uosc(pos, query)
     local menu_props = {
         type = "menu_subtitle",
-        title = "输入搜索内容",
+        title = "Saisissez votre recherche",
         search_style = "palette",
         search_debounce = "submit",
         search_suggestion = query,
@@ -595,7 +595,7 @@ function open_input_menu_uosc(pos, query)
             "search-subtitles-event",
             tostring(pos),
         },
-        footnote = "使用enter或ctrl+enter进行搜索",
+        footnote = "Utilisez entrée ou ctrl+entrée pour lancer la recherche",
         items = {},
     }
     local json_props = utils.format_json(menu_props)
@@ -637,7 +637,7 @@ local function sub_assrt()
     local title = mp.get_property("media-title")
     local thin_space = string.char(0xE2, 0x80, 0x89)
     if not path then
-        msg.error("No file loaded.")
+        msg.error("Aucun fichier chargé.")
         return
     end
 

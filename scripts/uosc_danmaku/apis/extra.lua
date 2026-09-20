@@ -16,7 +16,7 @@ local function load_extra_danmaku(url, episode, number, class, id, site, title, 
     if url:match("^.-%.html") then
         play_url = url:match("^(.-%.html).*")
     elseif url:match("^https?://v%.youku%.com/") and url:match("[?&]vid=") then
-        -- 转换 youku 的短链接形式 video?vid=... 到真实播放页 v_show/id_*.html
+        -- Convertit l'URL courte Youku video?vid=... vers la page réelle v_show/id_*.html
         local vid = url:match("[?&]vid=([^&]+)")
         if vid then
             play_url = "https://v.youku.com/v_show/id_" .. vid .. ".html"
@@ -70,13 +70,13 @@ local function query_tmdb(title, class, menu)
 
     local data = utils.parse_json(res.stdout)
     if not res.status or res.status ~= 0 or not data.results or #data.results == 0 then
-        local message = "获取 tmdb 中文数据失败"
+        local message = "Échec de la récupération des données chinoises de TMDB"
         if uosc_available then
             update_menu_uosc(menu.type, menu.title, message, menu.footnote, menu.cmd, title)
         else
             show_message(message, 3)
         end
-        msg.error("获取 tmdb 中文数据失败：" .. res.stdout)
+        msg.error("Échec de la récupération des données chinoises de TMDB：" .. res.stdout)
     else
         if class == "tv" then
             return data.results[1].name
@@ -86,7 +86,7 @@ local function query_tmdb(title, class, menu)
     end
 end
 
--- 从单个 seriesPlaylinks 项解析出有效的播放 URL
+-- Extrait une URL de lecture valide d'une entrée seriesPlaylinks
 local function extract_episode_url(item, playlink)
     if not item then return nil end
     if type(item) == 'string' then
@@ -97,7 +97,7 @@ local function extract_episode_url(item, playlink)
     return nil
 end
 
--- 将 seriesPlaylinks 转换为统一的 episode_rows 列表：{ index=string, url=string }
+-- Convertit seriesPlaylinks en liste episode_rows uniforme : { index=string, url=string }
 local function build_episode_rows(seriesPlaylinks, playlink)
     if not seriesPlaylinks or type(seriesPlaylinks) ~= 'table' then return nil end
     local rows = {}
@@ -135,7 +135,7 @@ local function get_number(cat, id, site)
     return nil
 end
 
--- 使用 /v1/detail 分批获取集数（每批最多200集）
+-- Récupère les épisodes par lots via /v1/detail (200 au maximum par lot)
 local function get_episodes_v1(cat, id, site, number)
     if not number or tonumber(number) == 0 then
         return nil
@@ -202,7 +202,7 @@ local function get_episodes_v2(cat, id, site)
 
     local parsed = utils.parse_json(res.stdout)
     if not parsed then
-        msg.warn("episodesv2: 解析返回失败: " .. (res.stdout or ""))
+        msg.warn("episodesv2 : impossible d'analyser la réponse : " .. (res.stdout or ""))
         return nil
     end
 
@@ -226,10 +226,10 @@ local function get_episodes_v2(cat, id, site)
 end
 
 function get_details(class, id, site, title, year, number, episodenum)
-    local message = episodenum and "查询弹幕中..." or "加载数据中..."
+    local message = episodenum and "Recherche de danmaku…" or "Chargement des données…"
     local menu_type = "menu_details"
-    local menu_title = "剧集信息"
-    local footnote = "使用 / 打开筛选"
+    local menu_title = "Informations sur les épisodes"
+    local footnote = "Appuyez sur / pour filtrer"
     if uosc_available and not episodenum then
         update_menu_uosc(menu_type, menu_title, message, footnote, nil, nil, "spinner")
     else
@@ -251,7 +251,7 @@ function get_details(class, id, site, title, year, number, episodenum)
     local episodes = nil
     local episode_rows = nil
 
-    -- 优先尝试使用搜索时缓存的 seriesPlaylinks（若存在且站点匹配）
+    -- Utilise d'abord le cache seriesPlaylinks de la recherche s'il existe et correspond au site
     if cat == 2 or cat == 4 then
         local cid = tostring(id)
         local cached = cached_series_playlinks[cid]
@@ -263,13 +263,13 @@ function get_details(class, id, site, title, year, number, episodenum)
         end
     end
 
-    -- 若未命中缓存，则继续使用 episodesv2/v1 的原有流程
+    -- À défaut de cache, reprend le flux episodesv2/v1
     if not episode_rows then
         if cat == 2 or cat == 4 then
             episodes = get_episodes_v2(cat, id, site)
         end
 
-        -- 统一构建 episode_rows：优先使用 episodesv2 返回的数据，否则使用 v1/detail
+        -- Construit episode_rows de façon uniforme, à partir d'episodesv2 puis de v1/detail en secours
         if episodes then
             episode_rows = {}
             for _, ep in ipairs(episodes) do
@@ -280,25 +280,25 @@ function get_details(class, id, site, title, year, number, episodenum)
                 number = get_number(cat, id, site)
             end
             if not number or cat == 0 then
-                local message = "无结果"
+                local message = "Aucun résultat"
                 if uosc_available and not episodenum then
                     update_menu_uosc(menu_type, menu_title, message, footnote)
                 else
                     show_message(message, 3)
                 end
-                msg.verbose("无结果")
+                msg.verbose("Aucun résultat")
                 return
             end
 
             episode_rows = get_episodes_v1(cat, id, site, number)
             if not episode_rows or #episode_rows == 0 then
-                local message = "无结果"
+                local message = "Aucun résultat"
                 if uosc_available and not episodenum then
                     update_menu_uosc(menu_type, menu_title, message, footnote)
                 else
                     show_message(message, 3)
                 end
-                msg.verbose("无结果")
+                msg.verbose("Aucun résultat")
                 return
             end
         end
@@ -315,7 +315,7 @@ function get_details(class, id, site, title, year, number, episodenum)
         end
 
         table.insert(items, {
-            title = "↩️ 返回搜索结果",
+            title = "↩️ Retour aux résultats de recherche",
             value = { "script-message-to", "uosc", "open-menu", latest_menu_anime },
             keep_open = false,
             selectable = true,
@@ -344,13 +344,13 @@ function get_details(class, id, site, title, year, number, episodenum)
             end)
         end
     else
-        local message = "无结果"
+        local message = "Aucun résultat"
         if uosc_available and not episodenum then
             update_menu_uosc(menu_type, menu_title, message, footnote)
         else
             show_message(message, 3)
         end
-        msg.verbose("无结果")
+        msg.verbose("Aucun résultat")
     end
 end
 
@@ -369,13 +369,13 @@ local function search_query(query, class, menu)
     })
 
     if not res.status or res.status ~= 0 then
-        local message = "无结果"
+        local message = "Aucun résultat"
         if uosc_available then
             update_menu_uosc(menu.type, menu.title, message, menu.footnote, menu.cmd, query)
         else
             show_message(message, 3)
         end
-        msg.verbose("无结果")
+        msg.verbose("Aucun résultat")
         return
     end
 
@@ -384,7 +384,7 @@ local function search_query(query, class, menu)
     if result and result.data.longData and result.data.longData.rows then
         for _, item in ipairs(result.data.longData.rows) do
             if item.playlinks then
-                -- 如果搜索结果中包含 seriesPlaylinks，则缓存它（使用 en_id 作为 key）
+                -- Met seriesPlaylinks en cache lorsqu'il figure dans les résultats, avec en_id comme clé
                 if item.seriesPlaylinks and item.en_id then
                     local playlink = nil
                     if item.playlinks and item.seriesSite then
@@ -400,7 +400,7 @@ local function search_query(query, class, menu)
                     if item.playlinks[source_id] then
                         table.insert(items, {
                             title = item.titleTxt,
-                            hint = item.cat_name .. " | " .. item.year .. " | 来源：" .. source_name,
+                            hint = item.cat_name .. " | " .. item.year .. " | Source : " .. source_name,
                             value = {
                                 "script-message-to",
                                 mp.get_script_name(),
@@ -424,13 +424,13 @@ local function search_query(query, class, menu)
             end)
         end
     else
-        local message = "无结果"
+        local message = "Aucun résultat"
         if uosc_available then
             update_menu_uosc(menu.type, menu.title, message, menu.footnote, menu.cmd, query)
         else
             show_message(message, 3)
         end
-        msg.verbose("无结果")
+        msg.verbose("Aucun résultat")
     end
 end
 
@@ -438,11 +438,11 @@ function query_extra(name, class)
     local name = name:gsub("%s*%(%d-%)%s*$", "")
     local title = nil
     local class = class and class:lower()
-    local message = "加载数据中..."
+    local message = "Chargement des données…"
     local menu = {
         type = "menu_anime",
-        title = "在此处输入番剧名称",
-        footnote = "使用enter或ctrl+enter进行搜索"
+        title = "Saisissez ici le titre de la série",
+        footnote = "Appuyez sur Entrée ou Ctrl+Entrée pour rechercher"
     }
     menu.cmd = { "script-message-to", mp.get_script_name(), "search-anime-event" }
     if uosc_available then
@@ -458,7 +458,7 @@ function query_extra(name, class)
 
 
     if options.tmdb_api_key == "" or #Base64.decode(options.tmdb_api_key) < 32 then
-        local message = "请正确设置 tmdb_api_key 或尝试使用中文搜索"
+        local message = "Configurez correctement tmdb_api_key ou essayez une recherche en chinois"
         if uosc_available then
             update_menu_uosc(menu.type, menu.title, message, menu.footnote, menu.cmd, name)
         else

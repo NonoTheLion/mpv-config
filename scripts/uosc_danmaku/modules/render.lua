@@ -1,4 +1,4 @@
--- modified from https://github.com/rkscv/danmaku/blob/main/danmaku.lua
+-- Adapté de https://github.com/rkscv/danmaku/blob/main/danmaku.lua
 local msg = require('mp.msg')
 local utils = require("mp.utils")
 local unpack = unpack or table.unpack
@@ -20,15 +20,15 @@ local function realtime_position_text(event, pos, displayarea)
     end
 
     local x1, y1, x2, y2 = unpack(event.move)
-    -- 计算移动的时间范围
-    local duration = event.end_time - event.start_time  --mean: options.scrolltime
-    local progress = (pos - event.start_time) / duration  -- 移动进度 [0, 1]
+    -- Calcule la durée du déplacement
+    local duration = event.end_time - event.start_time  -- Correspond à options.scrolltime
+    local progress = (pos - event.start_time) / duration  -- Progression du déplacement [0, 1]
 
-    -- 计算当前坐标
+    -- Calcule les coordonnées actuelles
     local current_x = tonumber(x1 + (x2 - x1) * progress)
     local current_y = tonumber(y1 + (y2 - y1) * progress)
 
-    -- 移除 \move 标签并应用当前坐标
+    -- Retire la balise \move et applique les coordonnées actuelles
     local clean_text = event.text:gsub("\\move%(.-%)", "")
     if current_y > displayarea then return end
     if event.style ~= "SP" and event.style ~= "MSG" then
@@ -74,7 +74,7 @@ function render(pos_arg)
     local max_display = math.max(options.scrolltime, options.fixtime)
     local window_start = pos - max_display
 
-    -- 跳过已结束的弹幕
+    -- Ignore les danmaku terminés
     local lo = binary_search(COMMENTS, window_start, function(item) return item.start_time end)
 
     local re_entity = "&#%d+;"
@@ -86,7 +86,7 @@ function render(pos_arg)
         local event = COMMENTS[i]
         if not event then break end
 
-        if event.start_time > pos then break end  -- 后续弹幕提前退出
+        if event.start_time > pos then break end  -- Quitte tôt car les danmaku suivants commencent plus tard
         if event.end_time >= pos then
             local text = realtime_position_text(event, pos, height * options.displayarea)
             if text then
@@ -100,7 +100,7 @@ function render(pos_arg)
                 end)
             end
 
-            -- 构建 ASS 字符串
+            -- Construit la chaîne ASS
             local event_font_prefix = ""
             if event.font_size then
                 local configured_size = tonumber(options.fontsize) or fontsize
@@ -118,7 +118,7 @@ function render(pos_arg)
         end
     end
 
-    -- 写入低层（滚动）和高层（顶/底）overlay，并设置 z 值以控制堆叠
+    -- Écrit les calques bas (défilants) et haut (fixes), puis règle z pour contrôler l'empilement
     overlay_low.res_x = width
     overlay_low.res_y = height
     overlay_low.z = 0

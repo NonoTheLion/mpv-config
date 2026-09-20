@@ -3,13 +3,13 @@ local utils = require('mp.utils')
 
 local user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
 
--- 将 URL 中的百分号编码解码为字符
+-- Décode les séquences pourcentées d'une URL
 local function normalize_url(path)
     if not path then return '' end
     return (path:gsub('%%(%x%x)', hex_to_char))
 end
 
--- 从 URL 提取 vid
+-- Extrait vid de l'URL
 local function extract_vid(url)
     if not url then return nil end
     local vid = url:match('[?&]vid=([^&?#]+)')
@@ -25,7 +25,7 @@ local function extract_vid(url)
     return vid
 end
 
--- 构造 curl 请求参数（通用）
+-- Construit les paramètres curl communs
 local function build_curl_args(target_url)
     local args = {
         'curl',
@@ -44,7 +44,7 @@ local function build_curl_args(target_url)
     return args
 end
 
--- 解析单个 segment 返回并把弹幕追加到 output_table
+-- Analyse un segment et ajoute ses danmaku à output_table
 local function parse_segment_to_output(seg_json, output_table)
     if not seg_json or not seg_json['barrage_list'] then return end
     for _, item in ipairs(seg_json['barrage_list']) do
@@ -62,10 +62,10 @@ local function parse_segment_to_output(seg_json, output_table)
     end
 end
 
--- 保存并加载最终弹幕 JSON
+-- Enregistre et charge le JSON final des danmaku
 local function save_output_and_load(output_table, source_url)
     if #output_table == 0 then
-        show_message('未获取到任何弹幕', 3)
+        show_message('Aucun danmaku récupéré', 3)
         return
     end
     local final_json_str = utils.format_json(output_table)
@@ -73,7 +73,7 @@ local function save_output_and_load(output_table, source_url)
     load_danmaku(true)
 end
 
--- 为 腾讯视频 加载弹幕
+-- Charge les danmaku Tencent Video
 function load_danmaku_for_tencent(path, callback)
     callback = callback or function() end
     local url = normalize_url(path)
@@ -83,7 +83,7 @@ function load_danmaku_for_tencent(path, callback)
 
     local vid = extract_vid(url)
     if not vid then
-        msg.error('无法从 URL 中解析 vid: ' .. tostring(url))
+        msg.error("Impossible d'extraire vid de l'URL : " .. tostring(url))
         callback(false)
         return
     end
@@ -95,19 +95,19 @@ function load_danmaku_for_tencent(path, callback)
 
     call_cmd_async(base_args, function(err, out)
         if err then
-            msg.error('请求腾讯弹幕 base 失败: ' .. tostring(err))
+            msg.error('Échec de la requête de base des danmaku Tencent : ' .. tostring(err))
             callback(false)
             return
         end
 
         local base_json = utils.parse_json(out)
         if not base_json or not base_json['segment_index'] then
-            show_message('好像没有弹幕哦', 3)
+            show_message('Aucun danmaku ne semble disponible', 3)
             callback(false)
             return
         end
 
-        -- 构造 segment 请求列表
+        -- Construit la liste des requêtes de segments
         local segments = {}
         local seg_index = base_json['segment_index']
         if type(seg_index) == 'table' then
@@ -125,7 +125,7 @@ function load_danmaku_for_tencent(path, callback)
         end
 
         if #segments == 0 then
-            show_message('没有找到弹幕分段', 3)
+            show_message('Aucun segment de danmaku trouvé', 3)
             callback(false)
             return
         end
@@ -138,7 +138,7 @@ function load_danmaku_for_tencent(path, callback)
 
         local function per_response_cb(server, err, out)
             if err then
-                msg.warn('请求段失败: ' .. tostring(server) .. ' 错误: ' .. tostring(err))
+                msg.warn('Échec de la requête du segment : ' .. tostring(server) .. ' erreur : ' .. tostring(err))
                 return
             end
             local seg_json = utils.parse_json(out)
@@ -151,7 +151,7 @@ function load_danmaku_for_tencent(path, callback)
             callback(ok)
         end
 
-        -- 并行请求 segments
+        -- Interroge les segments en parallèle
         parallel_requests(segments, build_args_fn, per_response_cb, final_cb, {concurrency = 6, per_request_timeout = 15})
     end)
 end

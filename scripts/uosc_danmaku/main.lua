@@ -109,23 +109,23 @@ end
 
 function show_loaded(init)
     if not COMMENTS then
-        show_message("comments无数据", 3)
-        msg.error("comments无数据")
+        show_message("Aucune donnée de commentaires", 3)
+        msg.error("Aucune donnée de commentaires")
         return
     end
     if DANMAKU.anime and DANMAKU.episode then
-        show_message("匹配内容：" .. DANMAKU.anime .. "-" .. DANMAKU.episode .. "\\N弹幕加载成功，共计" .. #COMMENTS .. "条弹幕", 3)
+        show_message("Correspondance : " .. DANMAKU.anime .. "-" .. DANMAKU.episode .. "\\NDanmaku chargés, " .. #COMMENTS .. " au total", 3)
         if init then
-            msg.info(DANMAKU.anime .. "-" .. DANMAKU.episode .. " 弹幕加载成功，共计" .. #COMMENTS .. "条弹幕")
+            msg.info(DANMAKU.anime .. "-" .. DANMAKU.episode .. " danmaku chargés, " .. #COMMENTS .. " au total")
         end
     else
-        show_message("弹幕加载成功，共计" .. #COMMENTS .. "条弹幕", 3)
+        show_message("Danmaku chargés, " .. #COMMENTS .. " au total", 3)
     end
     mp.set_property_native(DANMAKU_COUNT, #COMMENTS)
 end
 
--- 获取指定时间的延迟
--- 返回该时间点之前所有延迟段的总和
+-- Récupère le décalage applicable à un instant donné
+-- Renvoie la somme de tous les segments de décalage antérieurs à cet instant
 function get_delay_for_time(delay_segments, time)
     if not delay_segments or #delay_segments == 0 then return 0 end
 
@@ -149,9 +149,9 @@ end
 local function merge_delay_segments(segments)
     if not segments or #segments == 0 then return {} end
 
-    local NEAREST_THRESHOLD = 10  -- 最邻近段合并阈值
-    local MERGE_THRESHOLD = 30    -- 跨段合并阈值
-    local EPSILON = 1e-6          -- 判断接近 0 的阈值
+    local NEAREST_THRESHOLD = 10  -- Seuil de fusion des segments les plus proches
+    local MERGE_THRESHOLD = 30    -- Seuil de fusion entre segments distants
+    local EPSILON = 1e-6          -- Seuil de détection d'une valeur proche de 0
 
     table.sort(segments, function(a, b) return a.start < b.start end)
 
@@ -209,7 +209,7 @@ function parse_delay_input(text)
     if not text then return nil end
     local s = tostring(text):gsub("%s+", "")
     if s == "" then return nil end
-    -- XmYs 格式，允许负号在分钟部分
+    -- Format XmYs, le signe négatif est autorisé sur la partie minutes
     local m, sec = string.match(s, "^(%-?%d+)m(%d+)s$")
     if m and sec then
         m = tonumber(m)
@@ -218,7 +218,7 @@ function parse_delay_input(text)
         if m < 0 then sec = -sec end
         return m * 60 + sec
     end
-    -- 普通数字（整数或小数），支持负数
+    -- Nombre simple (entier ou décimal), valeurs négatives acceptées
     local n = tonumber(s)
     if n ~= nil then return n end
     return nil
@@ -271,7 +271,7 @@ local function set_danmaku_delay(dly, time, specific_source)
         render()
     end
 
-    -- 防抖：批量重建 ASS 事件并渲染，避免频繁变更导致重复重建
+    -- Anti-rebond : reconstruit les événements ASS par lots puis rend l'affichage, pour éviter les reconstructions répétées
     if rebuild_convert_timer then
         rebuild_convert_timer:kill()
         rebuild_convert_timer = nil
@@ -287,9 +287,9 @@ local function set_danmaku_delay(dly, time, specific_source)
     if specific_source then
         local source = DANMAKU.sources[specific_source]
         local source_delay = get_delay_for_time(source and source.delay_segments, time or 0)
-        show_message('设置弹幕源延迟: ' .. string.format("%.1f", source_delay + 1e-10) .. ' s')
+        show_message('Décalage de la source danmaku : ' .. string.format("%.1f", source_delay + 1e-10) .. ' s')
     else
-        show_message('设置弹幕延迟: ' .. string.format("%.1f", DELAY + 1e-10) .. ' s')
+        show_message('Décalage des danmaku : ' .. string.format("%.1f", DELAY + 1e-10) .. ' s')
         mp.set_property_native(DELAY_PROPERTY, DELAY)
     end
 end
@@ -314,8 +314,8 @@ local function clear_source()
 
     load_danmaku(false)
 
-    show_message("已重置当前视频所有弹幕源更改", 3)
-    msg.verbose("已重置当前视频所有弹幕源更改")
+    show_message("Toutes les modifications des sources danmaku de cette vidéo ont été réinitialisées", 3)
+    msg.verbose("Toutes les modifications des sources danmaku de cette vidéo ont été réinitialisées")
 end
 
 function write_history(episodeid, api_server)
@@ -544,19 +544,19 @@ local function get_save_danmaku_output(path, filename)
     return utils.join_path(dir, filename .. ".xml")
 end
 
--- 视频播放时保存弹幕
+-- Enregistre les danmaku pendant la lecture de la vidéo
 function save_danmaku(not_forced)
     local path = mp.get_property("path")
     local filename = is_protocol(path) and mp.get_property("media-title") or mp.get_property('filename/no-ext')
     local danmaku_out = get_save_danmaku_output(path, filename)
     if not danmaku_out or (not file_exists(danmaku_out)
     and not is_writable(danmaku_out)) then
-        show_message("此弹幕文件不支持保存至本地")
-        msg.warn("此弹幕文件不支持保存至本地")
+        show_message("Ce fichier de danmaku ne peut pas être enregistré localement")
+        msg.warn("Ce fichier de danmaku ne peut pas être enregistré localement")
     else
         if not_forced and file_exists(danmaku_out) then
-            show_message("已存在同名弹幕文件：" .. danmaku_out)
-            msg.info("已存在同名弹幕文件：" .. danmaku_out)
+            show_message("Un fichier de danmaku du même nom existe déjà : " .. danmaku_out)
+            msg.info("Un fichier de danmaku du même nom existe déjà : " .. danmaku_out)
             return
         else
             convert_danmaku_to_xml(danmaku_out)
@@ -564,7 +564,7 @@ function save_danmaku(not_forced)
     end
 end
 
--- 加载弹幕
+-- Charge les danmaku
 function load_danmaku(from_menu, no_osd)
     if not ENABLED then return end
     convert_danmaku_to_ass_events()
@@ -600,16 +600,16 @@ function load_danmaku_for_url(path)
     addon_danmaku()
 end
 
--- 自动加载上次匹配的弹幕
+-- Chargement automatique des derniers danmaku associés
 function auto_load_danmaku(path, dir, filename, number)
     if dir ~= nil then
         local history_json = read_file(HISTORY_PATH)
         if history_json ~= nil then
             local history = utils.parse_json(history_json) or {}
-            -- 1.判断父文件名是否存在
+            -- 1. Vérifie si le nom du dossier parent existe
             local history_dir = history[dir]
             if history_dir ~= nil then
-                --2.如果存在，则获取number和id
+                --2. S'il existe, récupère number et id
                 DANMAKU.anime = history_dir.animeTitle
                 local episode_number = history_dir.episodeTitle and history_dir.episodeTitle:match("%d+")
                 local history_number = history_dir.episodeNumber
@@ -633,11 +633,11 @@ function auto_load_danmaku(path, dir, filename, number)
                     playing_number = get_episode_number(filename)
                 end
                 if playing_number ~= nil then
-                    local x = playing_number - history_number --获取集数差值
+                    local x = playing_number - history_number --Calcule l'écart entre les numéros d'épisode
                     DANMAKU.episode = episode_number and string.format("第%s话", episode_number + x) or history_dir.episodeTitle
                     DANMAKU.api_server = history_api_server or nil
-                    show_message("自动加载上次匹配的弹幕", 3)
-                    msg.verbose("自动加载上次匹配的弹幕")
+                    show_message("Chargement automatique des derniers danmaku associés", 3)
+                    msg.verbose("Chargement automatique des derniers danmaku associés")
                     if history_id then
                         local tmp_id = tostring(x + history_id)
                         set_episode_id(tmp_id)
@@ -666,7 +666,7 @@ function init(path)
     local video = mp.get_property_native("current-tracks/video")
     local duration = mp.get_property_number("duration", 0)
     if not video or video["image"] or video["albumart"] or duration < 60 then
-        msg.info("不支持的播放内容（非视频）")
+        msg.info("Contenu non pris en charge (ce n'est pas une vidéo)")
         return
     end
     if is_protocol(path) then
@@ -728,7 +728,7 @@ mp.register_event("file-loaded", function()
     end
 end)
 
--------------- 键位绑定 --------------
+-------------- Raccourcis clavier --------------
 mp.add_key_binding(options.open_search_danmaku_menu_key, "open_search_danmaku_menu", function()
     mp.commandv("script-message", "open_search_danmaku_menu")
 end)
@@ -736,7 +736,7 @@ mp.add_key_binding(options.show_danmaku_keyboard_key, "show_danmaku_keyboard", f
     mp.commandv("script-message", "show_danmaku_keyboard")
 end)
 
--------------- 事件注册 --------------
+-------------- Enregistrement des événements --------------
 mp.register_script_message("danmaku-delay", function(...)
     local commands = {...}
     local delay_str, time_str = commands[1], commands[2]
@@ -744,7 +744,7 @@ mp.register_script_message("danmaku-delay", function(...)
     local dly = parse_delay_input(delay_str)
     local time = time_str and tonumber(time_str)
     if type(dly) ~= "number" then
-        show_message("参数错误：缺少有效的延迟秒数", 3)
+        show_message("Paramètre incorrect : nombre de secondes de décalage manquant ou invalide", 3)
         return
     end
     if source_arg and source_arg ~= "nil" then
@@ -760,7 +760,7 @@ mp.register_script_message("show_danmaku_keyboard", function()
         toggle_danmaku_switch("on")
 
         if COMMENTS == nil then
-            show_message("加载弹幕初始化...", 3)
+            show_message("Initialisation du chargement des danmaku…", 3)
             set_danmaku_visibility(true)
             local path = mp.get_property("path")
             init(path)
@@ -769,7 +769,7 @@ mp.register_script_message("show_danmaku_keyboard", function()
             show_danmaku_func()
         end
     else
-        show_message("关闭弹幕", 2)
+        show_message("Masquer les danmaku", 2)
         toggle_danmaku_switch("off")
         hide_danmaku_func()
     end
@@ -778,7 +778,7 @@ end)
 mp.register_script_message("auto_load_fallback", function()
     if not fallback_triggered and options.auto_fallback_search and COMMENTS == nil then
         fallback_triggered = true
-        msg.info("自动加载弹幕失败，自动弹出搜索框")
+        msg.info("Échec du chargement automatique des danmaku ; ouverture de la recherche")
         mp.commandv("script-message", "open_search_danmaku_menu")
     end
 end)

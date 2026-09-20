@@ -110,7 +110,7 @@ local function build_query_string(params)
     return table.concat(parts, '&')
 end
 
--- Helper: 构造 curl 参数（POST form data）
+-- Fonction auxiliaire : construit les paramètres curl (formulaire POST)
 local function youku_build_curl_args_for_server(server)
     local headers = {
         'Content-Type: application/x-www-form-urlencoded',
@@ -126,11 +126,11 @@ local function youku_build_curl_args_for_server(server)
     return args
 end
 
--- Helper: 解析单个 youku 响应并把 danmu 加入 output_table
+-- Fonction auxiliaire : analyse une réponse Youku et ajoute les danmaku à output_table
 local function youku_parse_response(out, server, output_table)
     if not out or out == '' then return 0 end
 
-    -- 优先解析外层 JSON，再解析内层被转义的 result
+    -- Analyse d'abord le JSON externe, puis le champ result interne échappé
     local parsed = nil
     local outer = utils.parse_json(out)
     if outer and type(outer) == 'table' then
@@ -191,7 +191,7 @@ local function youku_parse_response(out, server, output_table)
     return added
 end
 
--- Helper: 最终保存并加载弹幕
+-- Fonction auxiliaire : enregistre et charge les danmaku finaux
 local function youku_final_save(output_table, url, callback)
     local ok = #output_table > 0
     local final_json_str = utils.format_json(output_table)
@@ -200,7 +200,7 @@ local function youku_final_save(output_table, url, callback)
     callback(ok)
 end
 
--- Helper: 根据 mat/guid/tk/vid 构造单个 server 条目
+-- Fonction auxiliaire : construit une entrée server avec mat/guid/tk/vid
 local function youku_make_server_entry(mat, guid, tk, vid)
     local api_url = 'https://acs.youku.com/h5/mopen.youku.danmu.list/1.0/'
     local msg_obj = {
@@ -241,7 +241,7 @@ local function youku_make_server_entry(mat, guid, tk, vid)
     return {url = full_url, data = data_wrapper, cookie = cookie_header, mat = mat, sign = msg_obj.sign, msg_b64 = msg_b64}
 end
 
--- Helper: 并行获取 cna 和 tk，然后调用回调 cb({cna=..., tk=...})
+-- Fonction auxiliaire : récupère cna et tk en parallèle puis appelle cb({cna=..., tk=...})
 local function gather_cna_and_tk(cb)
     local res = {}
     local remaining = 2
@@ -259,7 +259,7 @@ local function gather_cna_and_tk(cb)
     end)
 end
 
--- Helper: 从已知参数发起 youku 弹幕请求并处理结果
+-- Fonction auxiliaire : lance les requêtes Youku avec les paramètres connus et traite les résultats
 local function start_youku_requests(source_url, vid, duration, cna, tk, callback)
     local max_mat = math.floor(duration / 60) + 1
     if max_mat < 1 then max_mat = 1 end
@@ -292,14 +292,14 @@ function load_danmaku_for_youku(path, callback)
     callback = callback or function() end
     local url = path or mp.get_property('stream-open-filename', '')
     if not url or url == '' then
-        msg.error('无有效 URL')
+        msg.error('URL invalide')
         callback(false)
         return
     end
 
     get_vinfos_by_video_id(url, function(vid, duration)
         if not vid then
-            show_message('获取优酷 video_id 失败', 3)
+            show_message("Impossible d'obtenir le video_id Youku", 3)
             callback(false)
             return
         end
@@ -308,12 +308,12 @@ function load_danmaku_for_youku(path, callback)
             local cna = res.cna
             local tk = res.tk
             if not cna then
-                show_message('获取优酷 cna 失败', 3)
+                show_message("Impossible d'obtenir le cna Youku", 3)
                 callback(false)
                 return
             end
             if not tk then
-                show_message('获取优酷 tk_enc 失败', 3)
+                show_message("Impossible d'obtenir le tk_enc Youku", 3)
                 callback(false)
                 return
             end

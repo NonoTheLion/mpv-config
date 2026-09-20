@@ -10,7 +10,7 @@ local function ass_escape(text)
                :gsub("\n", "\\N")
 end
 
--- 构建 per-source 的延迟查询函数
+-- Construit la fonction de recherche du décalage par source
 local function make_delay_lookup(source)
     local segments = nil
     local prefix = nil
@@ -55,7 +55,7 @@ local function decode_html_entities(text)
     end)
 end
 
--- 加载黑名单模式
+-- Charge les motifs de la liste noire
 local function load_blacklist_patterns(filepath)
     local patterns = {}
     if not file_exists(filepath) then
@@ -63,29 +63,29 @@ local function load_blacklist_patterns(filepath)
     end
     local file = io.open(filepath, "r")
     if not file then
-        msg.error("无法打开黑名单文件: " .. filepath)
+        msg.error("Impossible d'ouvrir le fichier de liste noire : " .. filepath)
         return patterns
     end
 
     if string.match(filepath, "%.xml$") then
-        -- xml文件格式示例
+        -- Exemple de format XML
         --<?xml version="1.0" encoding="utf-8"?>
         --<filters>
         --  <item enabled="true">t=卡在</item>
         --  <item enabled="true">t=进度条</item>
         --</filters>
-        print("加载黑名单文件: " .. filepath)
+        print("Chargement du fichier de liste noire : " .. filepath)
         for line in file:lines() do
             local pattern = line:match('<item%s+enabled="true">t=(.-)</item>')
             if pattern then
-                print("加载黑名单模式: " .. pattern)
+                print("Chargement du motif de liste noire : " .. pattern)
                 table.insert(patterns, pattern)
             end
         end
     end
 
     if string.match(filepath, "%.json$") then
-        -- json文件格式示例
+        -- Exemple de format JSON
         -- [{"type":0,"filter":"开门","opened":true,"id":15628936}
         -- ,{"type":0,"filter":"tony","opened":true,"id":15628939}
         -- ,{"type":1,"filter":"0+.1","opened":true,"id":15628951}]
@@ -103,13 +103,13 @@ local function load_blacklist_patterns(filepath)
     end
 
     if string.match(filepath, "%.txt$") then
-        -- 文本文件格式示例
+        -- Exemple de format texte
         -- 卡在
         -- 进度条
         for line in file:lines() do
-            line = line:match("^%s*(.-)%s*$")
-            if line ~= "" then
-                table.insert(patterns, line)
+            local trimmed = line:match("^%s*(.-)%s*$")
+            if trimmed ~= "" then
+                table.insert(patterns, trimmed)
             end
         end
     end
@@ -121,7 +121,7 @@ end
 local blacklist_file = mp.command_native({ "expand-path", options.blacklist_path })
 local black_patterns = load_blacklist_patterns(blacklist_file)
 
--- 检查字符串是否在黑名单中
+-- Vérifie si une chaîne correspond à la liste noire
 function is_blacklisted(str, patterns)
     for _, pattern in ipairs(patterns) do
         local ok, result = pcall(function()
@@ -131,13 +131,13 @@ function is_blacklisted(str, patterns)
         if ok and result then
             return true, pattern
         elseif not ok then
-            -- msg.debug("黑名单规则错误，跳过: " .. pattern .. "，错误信息：" .. result)
+            -- msg.debug("Motif de liste noire invalide, ignoré : " .. pattern .. " ; erreur : " .. result)
         end
     end
     return false
 end
 
--- 简繁转换
+-- Conversion chinois traditionnel/simplifié
 local function convert(text, dict)
     return text:gsub("[%z\1-\127\194-\244][\128-\191]*", function(c)
         return dict[c] or c
@@ -174,7 +174,7 @@ local function ch_convert_cached(text)
     return converted
 end
 
--- 合并重复弹幕
+-- Fusionne les danmaku en double
 local function merge_duplicate_danmaku(danmakus, threshold)
     if not threshold or tonumber(threshold) < 0 then return danmakus end
 
@@ -191,14 +191,14 @@ local function merge_duplicate_danmaku(danmakus, threshold)
 
     local final_groups = {}
 
-    -- 颜色合并
+    -- Fusion des couleurs
     for _, type_groups in pairs(groups) do
         for _, list in pairs(type_groups) do
             if options.merge_without_style then
                 table.insert(final_groups, list)
             else
                 local color_groups = {}
-                -- 利用弹幕同色大量重复的特征，缓存 颜色值 -> color_groups 索引
+                -- Exploite les nombreuses couleurs répétées et met en cache couleur -> indice color_groups
                 local exact_color_cache = {}
 
                 for _, d in ipairs(list) do
@@ -206,22 +206,22 @@ local function merge_duplicate_danmaku(danmakus, threshold)
                     local g_idx = exact_color_cache[c]
 
                     if g_idx then
-                        -- 命中缓存，直接插入
+                        -- En cas de cache trouvé, insère directement
                         table.insert(color_groups[g_idx], d)
                     else
-                        -- 未命中的颜色值，计算它是否落入已有代表颜色的 15 容差范围内
+                        -- Sinon, vérifie si la couleur se trouve à moins de 15 d’une couleur représentative
                         local found = false
                         for i, cg in ipairs(color_groups) do
                             if color_dist(cg[1].color or 16777215, c) <= 15 then
                                 table.insert(cg, d)
-                                -- 将该颜色值缓存为这个代表颜色的索引，后续遇到完全相同的颜色值可以直接命中
+                                -- Met en cache l’indice représentatif afin de retrouver directement cette couleur
                                 exact_color_cache[c] = i
                                 found = true
                                 break
                             end
                         end
 
-                        -- 超出容差范围的全新颜色代表，开辟新组
+                        -- Crée un groupe pour une nouvelle couleur hors tolérance
                         if not found then
                             table.insert(color_groups, {d})
                             exact_color_cache[c] = #color_groups
@@ -286,7 +286,7 @@ local function merge_duplicate_danmaku(danmakus, threshold)
     return merged
 end
 
--- 限制每屏弹幕条数
+-- Limite le nombre de danmaku à l’écran
 local function limit_danmaku(danmakus, limit)
     if not limit or limit <= 0 then
         return danmakus
@@ -327,14 +327,14 @@ local function limit_danmaku(danmakus, limit)
     return result
 end
 
--- 解析 XML 弹幕
+-- Analyse les danmaku XML
 function parse_xml_danmaku(xml_string)
     local danmakus = {}
     if not xml_string then
         return danmakus
     end
-    -- [^>]* 匹配其他 attributes
-    -- %f[^%s] 确保 p= 前面是空白字符
+    -- [^>]* correspond aux autres attributs
+    -- %f[^%s] garantit que p= est précédé d'un espace
     for p_attr, text in xml_string:gmatch('<d%s+[^>]*%f[^%s]p="([^"]+)"[^>]*>([^<]+)</d>') do
         local params = {}
         local i = 1
@@ -358,7 +358,7 @@ function parse_xml_danmaku(xml_string)
     return danmakus
 end
 
--- 解析 JSON 弹幕
+-- Analyse les danmaku JSON
 function parse_json_danmaku(json_string)
     local danmakus = {}
     if json_string:sub(1, 3) == "\239\187\191" then
@@ -367,7 +367,7 @@ function parse_json_danmaku(json_string)
 
     local json = utils.parse_json(json_string)
     if not json or type(json) ~= "table" then
-        msg.info("JSON 解析失败")
+        msg.info("Échec de l'analyse JSON")
         return danmakus
     end
 
@@ -398,7 +398,7 @@ function parse_json_danmaku(json_string)
     return danmakus
 end
 
--- 解析弹幕文件
+-- Analyse un fichier de danmaku
 function parse_danmaku_file(danmaku_input)
     local danmakus = {}
 
@@ -416,10 +416,10 @@ function parse_danmaku_file(danmaku_input)
                 table.insert(danmakus, d)
             end
         else
-            msg.info("无法读取文件内容: " .. danmaku_input)
+            msg.info("Impossible de lire le contenu du fichier : " .. danmaku_input)
         end
     else
-        msg.info("文件不存在: " .. danmaku_input)
+        msg.info("Fichier introuvable : " .. danmaku_input)
     end
 
     for _, d in ipairs(danmakus) do
@@ -427,19 +427,19 @@ function parse_danmaku_file(danmaku_input)
     end
 
     if #danmakus == 0 then
-        msg.info("未能解析任何弹幕")
+        msg.info("Aucun danmaku n'a pu être analysé")
         return nil
     end
 
     return danmakus
 end
 
---# 弹幕数组与布局算法 (Danmaku Array & Layout Algorithms)
+--# Tableaux de danmaku et algorithmes de placement
 local DanmakuArray = {}
 DanmakuArray.__index = DanmakuArray
 
--- 取整前的对数映射严格递增且严格凹。
--- 取整后的整数字号单调不减，最大字号用于避免合并数量过大时字号失控。
+-- Avant arrondi, la fonction logarithmique est strictement croissante et concave.
+-- Après arrondi, la taille entière ne décroît pas ; la taille maximale évite les valeurs excessives.
 function DanmakuArray.get_merged_font_size(base_size, count, growth, max_size)
     local base = positive_integer(base_size, 1)
     local n = positive_integer(count, 1)
@@ -458,8 +458,8 @@ function DanmakuArray:new(max_y)
     return obj
 end
 
--- 弹幕按出现时间递增的顺序处理。滚动弹幕完全移出屏幕后，或固定弹幕的
--- 显示时间结束后，它便不可能与当前及之后的弹幕碰撞，因此可以安全删除。
+-- Les danmaku sont traités par ordre d’apparition. Dès qu’un danmaku défilant a quitté l’écran,
+-- ou que la durée d’un danmaku fixe est écoulée, il peut être retiré sans risque de collision.
 function DanmakuArray:remove_expired(now)
     for i = #self.danmakus, 1, -1 do
         if self.danmakus[i].end_time <= now then
@@ -476,25 +476,25 @@ local function rolling_danmaku_collides(previous, start_time, velocity)
     local delta_velocity = velocity - previous.velocity
     local delta_x = (start_time - previous.start_time) * previous.velocity - previous.length
 
-    -- delta_x 小于 0 表示旧弹幕尾部尚未进入屏幕，新弹幕出现时会直接重叠。
+    -- Un delta_x négatif signifie que l’ancien danmaku n’est pas entièrement entré : le nouveau le chevaucherait.
     if delta_x < 0 then
         return true
     end
 
-    -- 新弹幕速度不大于旧弹幕时，不会缩短已有的 delta_x 间距。
+    -- Si le nouveau danmaku n’est pas plus rapide, il ne réduira pas l’écart delta_x.
     if delta_velocity <= 0 then
         return false
     end
 
-    -- 比较从新弹幕出现开始的追尾时间与旧弹幕的剩余显示时间；
-    -- 只有在旧弹幕离屏前追上它，才会发生碰撞。
+    -- Compare le temps nécessaire pour rattraper l’ancien danmaku à sa durée restante ;
+    -- il n’y a collision que si le rattrapage survient avant sa sortie de l’écran.
     local delta_time = delta_x / delta_velocity
     local remaining_time = previous.end_time - start_time
     return delta_time < remaining_time
 end
 
--- 从 y 轴顶部开始寻找可插入位置。对于每个候选位置，只检查 y 轴区间
--- 与新弹幕相交的已有弹幕；若其中存在碰撞，则跳到碰撞区间下方继续寻找。
+-- Cherche une position depuis le haut de l’axe y. Pour chaque position, ne vérifie que les intervalles
+-- qui croisent le nouveau danmaku ; en cas de collision, reprend sous l’intervalle concerné.
 local function find_y_from_top(array, height, collides)
     local y = 1
     while y + height - 1 <= array.max_y do
@@ -511,7 +511,7 @@ local function find_y_from_top(array, height, collides)
     return nil
 end
 
--- 从 y 轴顶部开始寻找滚动弹幕的位置，并记录成功插入的弹幕所占区间。
+-- Cherche depuis le haut une place pour un danmaku défilant et mémorise l’intervalle occupé.
 function DanmakuArray:get_position_y(start_time, length, height, resolution_x, duration)
     height = positive_integer(height, 1)
     length = math.max(0, tonumber(length) or 0)
@@ -536,7 +536,7 @@ function DanmakuArray:get_position_y(start_time, length, height, resolution_x, d
     return y
 end
 
--- 顶部固定弹幕自上而下寻找位置，底部固定弹幕则自下而上寻找位置。
+-- Les danmaku fixes du haut sont placés de haut en bas, ceux du bas de bas en haut.
 function DanmakuArray:get_fixed_y(start_time, height, duration, from_top)
     height = positive_integer(height, 1)
     duration = math.max(0.001, tonumber(duration) or 0.001)
@@ -571,7 +571,7 @@ function DanmakuArray:get_fixed_y(start_time, height, duration, from_top)
     return y
 end
 
--- 将弹幕转换为 XML 格式
+-- Convertit les danmaku au format XML
 function convert_danmaku_to_xml(danmaku_out)
     local danmakus = {}
     for url, source in pairs(DANMAKU.sources) do
@@ -595,13 +595,13 @@ function convert_danmaku_to_xml(danmaku_out)
     end
 
     if #danmakus == 0 then
-        show_message("弹幕内容为空，无法保存", 3)
-        msg.verbose("弹幕内容为空，无法保存")
+        show_message("Le contenu des danmaku est vide ; enregistrement impossible", 3)
+        msg.verbose("Le contenu des danmaku est vide ; enregistrement impossible")
         COMMENTS = {}
         return false
     end
 
-    -- 拼接为 XML 内容
+    -- Assemble le contenu XML
     local xml = { '<?xml version="1.0" encoding="UTF-8"?><i>\n' }
     for _, d in ipairs(danmakus) do
        local time = d.time
@@ -620,17 +620,17 @@ function convert_danmaku_to_xml(danmaku_out)
     end
     table.insert(xml, '</i>')
 
-    -- 写入 XML 文件
+    -- Écrit le fichier XML
     local file = io.open(danmaku_out, "w")
     if not file then
-       show_message("无法写入目标 XML 文件", 3)
-       msg.info("无法写入目标 XML 文件: " .. danmaku_out)
+       show_message("Impossible d'écrire le fichier XML de destination", 3)
+       msg.info("Impossible d'écrire le fichier XML de destination: " .. danmaku_out)
        return false
     end
     file:write(table.concat(xml))
     file:close()
-    show_message("转换 XML 弹幕成功： " .. danmaku_out, 3)
-    msg.info("转换 XML 弹幕成功： " .. danmaku_out)
+    show_message("Conversion des danmaku en XML réussie : " .. danmaku_out, 3)
+    msg.info("Conversion des danmaku en XML réussie : " .. danmaku_out)
     return true
 end
 
@@ -696,15 +696,15 @@ function convert_danmaku_to_ass_events(force)
 
     if #danmakus == 0 then
         if not force then
-            show_message("该集弹幕内容为空，结束加载", 3)
-            msg.verbose("该集弹幕内容为空，结束加载")
+            show_message("Cet épisode ne contient aucun danmaku ; chargement interrompu", 3)
+            msg.verbose("Cet épisode ne contient aucun danmaku ; chargement interrompu")
         end
         COMMENTS = {}
         return
     end
 
     if not force then
-        msg.info("已解析 " .. #danmakus .. " 条弹幕")
+        msg.info("Analyse terminée : " .. #danmakus .. " danmaku")
     end
 
     local fontsize = tonumber(options.fontsize) or 50
@@ -720,7 +720,7 @@ function convert_danmaku_to_ass_events(force)
     local roll_array = DanmakuArray:new(display_height)
     local fixed_array = DanmakuArray:new(display_height)
 
-    -- 预处理弹幕，先计算时间段以便进行数量限制
+    -- Prétraite les danmaku et calcule leurs intervalles afin d'en limiter le nombre
     local pre_events = {}
     for _, d in ipairs(danmakus) do
         local time = d.type == 1 and math.floor(d.time + 0.5) or d.time
@@ -756,7 +756,7 @@ function convert_danmaku_to_ass_events(force)
             fontsize, d.merge_count or 1, fontsize_growth, fontsize_max
         )
 
-        -- 颜色从十进制转为 BGR Hex
+        -- Convertit la couleur décimale en hexadécimal BGR
         local color = math.max(0, math.min(d.color or 0xFFFFFF, 0xFFFFFF))
         local color_hex = string.format("%06X", color)
         local r = string.sub(color_hex, 1, 2)
@@ -767,7 +767,7 @@ function convert_danmaku_to_ass_events(force)
         local style, effect
         local pos, move = nil, nil
 
-        -- 滚动弹幕 (类型 1, 2, 3)
+        -- Danmaku défilants (types 1, 2 et 3)
         if danmaku_type >= 1 and danmaku_type <= 3 then
             style = "R2L"
             local text_length = get_str_width(clean_text, event_fontsize)
@@ -779,7 +779,7 @@ function convert_danmaku_to_ass_events(force)
                 move = {x1, y, x2, y}
             end
 
-        -- 顶部弹幕 (类型 5)
+        -- Danmaku fixes en haut (type 5)
         elseif danmaku_type == 5 then
             style = "TOP"
             local x = res_x / 2
@@ -789,7 +789,7 @@ function convert_danmaku_to_ass_events(force)
                 pos = {x, y}
             end
 
-        -- 底部弹幕 (类型 4)
+        -- Danmaku fixes en bas (type 4)
         elseif danmaku_type == 4 then
             style = "BTM"
             local x = res_x / 2

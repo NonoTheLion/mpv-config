@@ -9,14 +9,14 @@ local active_request_cancel = nil
 local active_request_type = nil
 local request_cancelled = false
 
--- 如果 latest_menu_anime 中存在首项为加载占位，移除它（兼容完整 menu props 或 items 数组）
+-- Supprime le premier élément de chargement de latest_menu_anime s'il existe (compatible avec les propriétés de menu complètes et les tableaux items)
 local function strip_loading_from_latest_menu_anime()
     if not latest_menu_anime or #latest_menu_anime == 0 then return end
     local parsed = utils.parse_json(latest_menu_anime)
     if not parsed or type(parsed) ~= "table" then return end
     local function is_loading_item(it)
         if not it or type(it) ~= "table" then return false end
-        if it.title == "加载数据中..." then return true end
+        if it.title == "Chargement des données…" then return true end
         if it.italic == true and it.icon == "spinner" then return true end
         return false
     end
@@ -33,7 +33,7 @@ local function strip_loading_from_latest_menu_anime()
     end
 end
 
--- 统一取消并发请求：设置取消标志、剥离加载占位并调用实际取消函数
+-- Annule les requêtes concurrentes : pose le drapeau d'annulation, retire l'élément de chargement et appelle la fonction d'annulation
 local function perform_cancel_active_request(expected_type)
     if expected_type and active_request_type and tostring(expected_type) ~= tostring(active_request_type) then
         return
@@ -64,7 +64,7 @@ local function make_handle_response(ctx)
 
         local function do_final_update()
             local final_items = {}
-            -- 按配置的 server 顺序拼接每个 server 的结果
+            -- Assemble les résultats dans l'ordre des serveurs configurés
             for _, srv in ipairs(ctx.server_order or {}) do
                 local list = ctx.server_items and ctx.server_items[srv]
                 if list and type(list) == 'table' then
@@ -136,7 +136,7 @@ local function make_handle_response(ctx)
                 icon = "spinner",
             })
         end
-        -- 按 server_order 拼接当前已收到的结果
+        -- Assemble les résultats reçus selon server_order
         for _, srv in ipairs(ctx.server_order or {}) do
             local list = ctx.server_items and ctx.server_items[srv]
             if list and type(list) == 'table' then
@@ -166,7 +166,7 @@ local function make_handle_response(ctx)
     end
 end
 
--- 打开番剧数据匹配菜单
+-- Ouvre le menu de correspondance des séries
 function get_animes(query, filter_note)
     local encoded_query = url_encode(query)
     local all_metas = get_api_server_list(options.api_server, true)
@@ -180,11 +180,11 @@ function get_animes(query, filter_note)
             end
         end
         if #matched > 0 then
-            server_metas = { matched[1] }  -- 只取第一个匹配的
-            server_note = "服务器【" .. filter_note .. "】"
+            server_metas = { matched[1] }  -- Ne conserve que la première correspondance
+            server_note = "Serveur « " .. filter_note .. " »"
         else
-            show_message("未找到备注为【" .. filter_note .. "】的服务器，将使用全部服务器", 3)
-            msg.info("未找到备注为【" .. filter_note .. "】的服务器，将使用全部服务器")
+            show_message("Aucun serveur portant la note « " .. filter_note .. " » n'a été trouvé ; tous les serveurs seront utilisés", 3)
+            msg.info("Aucun serveur portant la note « " .. filter_note .. " » n'a été trouvé ; tous les serveurs seront utilisés")
             server_metas = all_metas
         end
     else
@@ -210,10 +210,10 @@ function get_animes(query, filter_note)
     local total_count = 0
     request_cancelled = false
 
-    local message = server_hint .. "加载数据中..."
+    local message = server_hint .. "Chargement des données…"
     local menu_type = "menu_anime"
-    local menu_title = "在此处输入番剧名称"
-    local footnote = "使用enter或ctrl+enter进行搜索"
+    local menu_title = "Saisissez ici le titre de la série"
+    local footnote = "Appuyez sur Entrée ou Ctrl+Entrée pour rechercher"
     local menu_cmd = { "script-message-to", mp.get_script_name(), "search-anime-event" }
 
     local function strip_trailing_dots(s)
@@ -233,11 +233,11 @@ function get_animes(query, filter_note)
         show_message(initial_message, 30)
     end
 
-    msg.verbose("尝试获取番剧数据，servers: " .. table.concat(servers, ", ") .. " query: " .. query)
+    msg.verbose("Tentative de récupération des données de la série, serveurs : " .. table.concat(servers, ", ") .. " query: " .. query)
 
     local build_args = make_build_args(encoded_query)
 
-    -- 构造 ctx，用于 handle_response 闭包访问和修改共享状态
+    -- Construit ctx pour permettre à la fermeture handle_response d'accéder à l'état partagé et de le modifier
     local ctx = {
         items = items,
         seen = seen,
@@ -289,10 +289,10 @@ function get_episodes(animeTitle, bangumiId, api_server)
     local url = api_server .. "/api/v2/bangumi/" .. bangumiId
     local items = {}
 
-    local message = "加载数据中..."
+    local message = "Chargement des données…"
     local menu_type = "menu_episodes"
-    local menu_title = "剧集信息"
-    local footnote = "使用 / 打开筛选"
+    local menu_title = "Informations sur les épisodes"
+    local footnote = "Appuyez sur / pour filtrer"
 
     if uosc_available then
         active_request_type = menu_type
@@ -317,14 +317,14 @@ function get_episodes(animeTitle, bangumiId, api_server)
         end
 
         table.insert(items, {
-            title = "↩️ 返回搜索结果",
+            title = "↩️ Retour aux résultats de recherche",
             value = { "script-message-to", mp.get_script_name(), "open-latest-menu-anime", latest_menu_anime },
             keep_open = false,
             selectable = true,
         })
 
         if err then
-            local message = "获取数据失败"
+            local message = "Échec de la récupération des données"
             if uosc_available then
                 table.insert(items, {
                     title = message,
@@ -338,13 +338,13 @@ function get_episodes(animeTitle, bangumiId, api_server)
             else
                 show_message(message, 3)
             end
-            msg.error("HTTP 请求失败：" .. tostring(err))
+            msg.error("Échec de la requête HTTP : " .. tostring(err))
             return
         end
 
         local response = utils.parse_json(stdout)
         if not response or not response.bangumi or not response.bangumi.episodes then
-            local message = "无结果"
+            local message = "Aucun résultat"
             if uosc_available then
                 table.insert(items, {
                     title = message,
@@ -373,7 +373,7 @@ function get_episodes(animeTitle, bangumiId, api_server)
             })
         end
 
-        -- ====== 新增：更新 latest_menu_anime ======
+        -- ====== Met à jour latest_menu_anime ======
         if latest_menu_anime and latest_menu_anime ~= "" then
             local menu_table = utils.parse_json(latest_menu_anime)
             if menu_table and type(menu_table.items) == "table" then
@@ -455,7 +455,7 @@ function open_menu_select(menu_items, is_time)
     end
     mp.commandv('script-message-to', 'console', 'disable')
     input.select({
-        prompt = is_time and '筛选:' or '选择:',
+        prompt = is_time and 'Filtrer :' or 'Sélectionner :',
         items = item_titles,
         submit = function(id)
             input.terminate()
@@ -475,12 +475,12 @@ function open_menu_select(menu_items, is_time)
     })
 end
 
--- 打开弹幕输入搜索菜单
+-- Ouvre le menu de recherche de danmaku
 function open_input_menu_get()
     mp.commandv('script-message-to', 'console', 'disable')
     local title = parse_title()
     input.get({
-        prompt = '番剧名称:',
+        prompt = 'Titre de la série :',
         default_text = title,
         cursor_position = title and #title + 1,
         submit = function(text)
@@ -497,7 +497,7 @@ function open_input_menu_uosc()
         local episode = DANMAKU.episode:gsub("%s.-$","")
         episode = episode:match("^(第.*[话回集]+)%s*") or episode
         items[#items + 1] = {
-            title = string.format("已关联弹幕：%s-%s", DANMAKU.anime, episode),
+            title = string.format("Danmaku associés : %s-%s", DANMAKU.anime, episode),
             bold = true,
             italic = true,
             keep_open = true,
@@ -506,19 +506,19 @@ function open_input_menu_uosc()
     end
 
     items[#items + 1] = {
-        hint = "  追加|ds或|dy或|dm可搜索电视剧|电影|国漫",
+        hint = "  Ajouter | ds, dy ou dm permet de rechercher des séries, films ou animations chinoises",
         keep_open = true,
         selectable = false,
     }
 
     local menu_props = {
         type = "menu_danmaku",
-        title = "在此处输入番剧名称",
+        title = "Saisissez ici le titre de la série",
         search_style = "palette",
         search_debounce = "submit",
         search_suggestion = parse_title(),
         on_search = { "script-message-to", mp.get_script_name(), "search-anime-event" },
-        footnote = "使用enter或ctrl+enter进行搜索",
+        footnote = "Appuyez sur Entrée ou Ctrl+Entrée pour rechercher",
         items = items
     }
     local json_props = utils.format_json(menu_props)
@@ -535,15 +535,15 @@ function open_input_menu()
     end
 end
 
--- 打开弹幕源添加管理菜单
+-- Ouvre le menu d'ajout et de gestion des sources de danmaku
 function open_add_menu_get()
     local menu_log, deal_value = {}, {}
 
-    -- 重建菜单内容函数
+    -- Fonction de reconstruction du contenu du menu
     local function rebuild_menu_log(select_num)
         deal_value = {}
         menu_log = {
-            { text = "【既有弹幕源】", style = "{\\c&H00CCFF&\\b1}" },
+            { text = "【Sources de danmaku existantes】", style = "{\\c&H00CCFF&\\b1}" },
             { text = "----------------------------", style = "{\\c&H888888&}" }
         }
 
@@ -553,22 +553,22 @@ function open_add_menu_get()
                 if source.from == "api_server" then
                     serial = serial + 1
                     local action = source.blocked and "unblock" or "block"
-                    local text = string.format("  [%02d] %s [来源：弹幕服务器%s]  ", serial, url,
-                        source.blocked and "（已屏蔽）" or "（未屏蔽）")
+                    local text = string.format("  [%02d] %s [source : serveur de danmaku%s]  ", serial, url,
+                        source.blocked and " (bloquée)" or " (active)")
                     local style = (tonumber(select_num) == serial) and "{\\c&HFFDE7F&\\b1}" or (action == "unblock" and "{\\c&H4C4CC3&\\b0}" or "{\\c&HCCCCCC&\\b0}")
                     deal_value[serial] = {value = url, action = action}
                     table.insert(menu_log, {text = text, style = style})
                 else
                     serial = serial + 1
                     local action1 = source.blocked and "unblock" or "block"
-                    local text1 = string.format("  [%02d] %s [来源：用户添加]%s  ", serial, url, source.blocked and " (已屏蔽)" or "（未屏蔽）")
+                    local text1 = string.format("  [%02d] %s [source : ajoutée par l'utilisateur]%s  ", serial, url, source.blocked and " (bloquée)" or " (active)")
                     local style1 = (tonumber(select_num) == serial) and "{\\c&HFFDE7F&\\b1}" or (action1 == "unblock" and "{\\c&H4C4CC3&\\b0}" or "{\\c&HCCCCCC&\\b0}")
                     deal_value[serial] = {value = url, action = action1}
                     table.insert(menu_log, {text = text1, style = style1})
 
                     serial = serial + 1
                     local action2 = "delete"
-                    local text2 = string.format("  [%02d] %s [来源：用户添加] (删除)  ", serial, url)
+                    local text2 = string.format("  [%02d] %s [source : ajoutée par l'utilisateur] (supprimer)  ", serial, url)
                     local style2 = (tonumber(select_num) == serial) and "{\\c&HFFDE7F&\\b1}" or "{\\c&HCCCCCC&\\b0}"
                     deal_value[serial] = {value = url, action = action2}
                     table.insert(menu_log, {text = text2, style = style2})
@@ -577,11 +577,11 @@ function open_add_menu_get()
         end
 
         if serial == 0 then
-            table.insert(menu_log, { text = "        无", style = "" })
+            table.insert(menu_log, { text = "        Aucune", style = "" })
         end
     end
 
-    -- 显示菜单
+    -- Affiche le menu
     local function show_menu(extra_lines, select_num)
         rebuild_menu_log(select_num)
 
@@ -595,7 +595,7 @@ function open_add_menu_get()
         else
             table.insert(display, { text = "\n", style = "" })
             table.insert(display, {
-                text = "提示: 输入【选项数字】可屏蔽或删除既有弹幕源",
+                text = "Conseil : saisissez le numéro d’une option pour bloquer ou supprimer une source existante",
                 style = "{\\c&H999999&}"
             })
         end
@@ -603,19 +603,19 @@ function open_add_menu_get()
         input.set_log(display)
     end
 
-    -- 获取操作提示
+    -- Renvoie l'indication correspondant à l'action
     local function get_hint(action)
         local hints = {
-            block = "按回车执行，屏蔽该弹幕源",
-            unblock = "按回车执行，解除该弹幕源的屏蔽",
-            delete = "按回车执行，删除该弹幕源"
+            block = "Appuyez sur Entrée pour bloquer cette source",
+            unblock = "Appuyez sur Entrée pour débloquer cette source",
+            delete = "Appuyez sur Entrée pour supprimer cette source"
         }
-        return hints[action] or "按回车执行，获取输入源地址url的弹幕"
+        return hints[action] or "Appuyez sur Entrée pour charger les danmaku de l'URL saisie"
     end
 
     input.get({
         keep_open = true,
-        prompt = "请在此输入源地址url: ",
+        prompt = "Saisissez ici l'URL de la source : ",
         opened = function() show_menu() end,
         edited = function(text)
             text = text:gsub("^%s*(.-)%s*$", "%1")
@@ -630,7 +630,7 @@ function open_add_menu_get()
             local hint = get_hint(event and event.action)
 
             show_menu({
-                { text = string.format("已输入: %s", text), style = "{\\c&HCCCCCC&}" },
+                { text = string.format("Saisie : %s", text), style = "{\\c&HCCCCCC&}" },
                 { text = hint, style = "{\\c&H999999&}" }
             }, text)
         end,
@@ -659,28 +659,28 @@ function open_add_menu_uosc()
     local sources = {}
     for url, source in pairs(DANMAKU.sources) do
         if source.data then
-            local count = #source.data  -- 弹幕条数
-            local count_text = string.format("（%d条）弹幕", count)
+            local count = #source.data  -- Nombre de danmaku
+            local count_text = string.format(" (%d) danmaku", count)
             local item = {title = utf8_sub(url, 1, 100), value = url, keep_open = true,}
             if source.from == "api_server" then
                 if source.blocked then
-                    item.hint = "来源：弹幕服务器（已屏蔽）"
-                    item.actions = {{icon = "check", name = "unblock", label = "解除屏蔽" .. count_text},}
+                    item.hint = "source : serveur de danmaku (bloquée)"
+                    item.actions = {{icon = "check", name = "unblock", label = "Débloquer" .. count_text},}
                 else
-                    item.hint = "来源：弹幕服务器（未屏蔽）"
-                    item.actions = {{icon = "not_interested", name = "block", label = "屏蔽" .. count_text},}
+                    item.hint = "source : serveur de danmaku (active)"
+                    item.actions = {{icon = "not_interested", name = "block", label = "Bloquer" .. count_text},}
                 end
             else
-                item.hint = "来源：用户添加"
+                item.hint = "source : ajoutée par l'utilisateur"
                 if source.blocked then
                     item.actions = {
-                        {icon = "check", name = "unblock", label = "解除屏蔽" .. count_text},
-                        {icon = "delete", name = "delete", label = "删除" .. count_text},
+                        {icon = "check", name = "unblock", label = "Débloquer" .. count_text},
+                        {icon = "delete", name = "delete", label = "Supprimer" .. count_text},
                     }
                 else
                     item.actions = {
-                        {icon = "not_interested", name = "block", label = "屏蔽" .. count_text},
-                        {icon = "delete", name = "delete", label = "删除" .. count_text},
+                        {icon = "not_interested", name = "block", label = "Bloquer" .. count_text},
+                        {icon = "delete", name = "delete", label = "Supprimer" .. count_text},
                     }
                 end
             end
@@ -689,11 +689,11 @@ function open_add_menu_uosc()
     end
     local menu_props = {
         type = "menu_source",
-        title = "在此输入源地址url",
+        title = "Saisissez ici l'URL de la source",
         search_style = "palette",
         search_debounce = "submit",
         on_search = { "script-message-to", mp.get_script_name(), "add-source-event" },
-        footnote = "使用enter或ctrl+enter进行添加",
+        footnote = "Appuyez sur Entrée ou Ctrl+Entrée pour ajouter",
         items = sources,
         item_actions_place = "outside",
         callback = {mp.get_script_name(), 'setup-danmaku-source'},
@@ -712,7 +712,7 @@ function open_add_menu()
     end
 end
 
--- 打开弹幕内容菜单
+-- Ouvre le menu du contenu des danmaku
 function open_content_menu(pos)
     local items = {}
     local time_pos = pos or mp.get_property_native("time-pos")
@@ -728,10 +728,10 @@ function open_content_menu(pos)
                 local delay_label_suffix = nil
                 local delay_num = delay and tonumber(delay)
                 if delay_num and math.abs(delay_num) > 0 then
-                    delay_label_suffix = string.format("已存在延迟: %+0.1fs", delay_num)
+                    delay_label_suffix = string.format("Décalage existant : %+0.1fs", delay_num)
                 end
 
-                local adjust_label = '调整弹幕延迟'
+                local adjust_label = 'Régler le décalage des danmaku'
                 if delay_label_suffix then
                     adjust_label = adjust_label .. '（' .. delay_label_suffix .. '）'
                 end
@@ -743,7 +743,7 @@ function open_content_menu(pos)
                         {
                             name = 'block_source',
                             icon = 'block',
-                            label = '屏蔽对应弹幕源'
+                            label = 'Bloquer la source correspondante'
                         },
                         {
                             name = 'adjust_delay',
@@ -760,8 +760,8 @@ function open_content_menu(pos)
 
     local menu_props = {
         type = "menu_content",
-        title = "弹幕内容",
-        footnote = "使用 / 打开搜索",
+        title = "Contenu des danmaku",
+        footnote = "Appuyez sur / pour rechercher",
         items = items,
         item_actions_place = "outside",
         callback = {mp.get_script_name(), 'handle-danmaku-content-action'},
@@ -776,25 +776,25 @@ function open_content_menu(pos)
 end
 
 local menu_items_config = {
-    bold = { title = "粗体", hint = options.bold, original = options.bold,
+    bold = { title = "Gras", hint = options.bold, original = options.bold,
         footnote = "true / false", },
-    fontsize = { title = "大小", hint = options.fontsize, original = options.fontsize,
-        scope = { min = 0, max = math.huge }, footnote = "请输入整数(>=0)", },
-    outline = { title = "描边", hint = options.outline, original = options.outline,
-        scope = { min = 0.0, max = 4.0 }, footnote = "输入范围：(0.0-4.0)" },
-    shadow = { title = "阴影", hint = options.shadow, original = options.shadow,
-        scope = { min = 0, max = math.huge }, footnote = "请输入整数(>=0)", },
-    scrolltime = { title = "速度", hint = options.scrolltime, original = options.scrolltime,
-        scope = { min = 1, max = math.huge }, footnote = "请输入整数(>=1)", },
-    opacity = { title = "透明度", hint = options.opacity, original = options.opacity,
-        scope = { min = 0, max = 1 }, footnote = "输入范围：0（完全透明）到1（不透明）", },
-    displayarea = { title = "弹幕显示范围", hint = options.displayarea, original = options.displayarea,
-        scope = { min = 0.0, max = 1.0 }, footnote = "显示范围(0.0-1.0)", },
+    fontsize = { title = "Taille", hint = options.fontsize, original = options.fontsize,
+        scope = { min = 0, max = math.huge }, footnote = "Saisissez un entier (≥ 0)", },
+    outline = { title = "Contour", hint = options.outline, original = options.outline,
+        scope = { min = 0.0, max = 4.0 }, footnote = "Plage autorisée : 0,0 à 4,0" },
+    shadow = { title = "Ombre", hint = options.shadow, original = options.shadow,
+        scope = { min = 0, max = math.huge }, footnote = "Saisissez un entier (≥ 0)", },
+    scrolltime = { title = "Vitesse", hint = options.scrolltime, original = options.scrolltime,
+        scope = { min = 1, max = math.huge }, footnote = "Saisissez un entier (≥ 1)", },
+    opacity = { title = "Opacité", hint = options.opacity, original = options.opacity,
+        scope = { min = 0, max = 1 }, footnote = "Plage : 0 (transparent) à 1 (opaque)", },
+    displayarea = { title = "Zone d'affichage des danmaku", hint = options.displayarea, original = options.displayarea,
+        scope = { min = 0.0, max = 1.0 }, footnote = "Zone d'affichage (0,0–1,0)", },
 }
--- 创建一个包含键顺序的表，这是样式菜单的排布顺序
+-- Crée la liste ordonnée des clés utilisée pour disposer le menu de style
 local ordered_keys = {"bold", "fontsize", "outline", "shadow", "scrolltime", "opacity", "displayarea"}
 
--- 设置弹幕样式菜单
+-- Configure le menu de style des danmaku
 function open_style_menu_get(query, indicator)
     mp.commandv('script-message-to', 'console', 'disable')
     local menu_log = {}
@@ -816,7 +816,7 @@ function open_style_menu_get(query, indicator)
 
     local function build_menu(source)
         menu_log = {
-            { text = "【弹幕样式菜单】", style = "{\\c&H00CCFF&\\b1}" },
+            { text = "【Style des danmaku】", style = "{\\c&H00CCFF&\\b1}" },
             { text = ("-"):rep(33), style = "{\\c&H888888&}" }
         }
 
@@ -824,7 +824,7 @@ function open_style_menu_get(query, indicator)
         for _, key in ipairs(ordered_keys) do
             serial = serial + 1
             local config = menu_items_config[key]
-            local text = string.format("  [%02d] %s   [目前：%s] ", serial, config.title, config.hint)
+            local text = string.format("  [%02d] %s   [Actuel : %s] ", serial, config.title, config.hint)
             text = config.hint ~= config.original and text .. "⟳" or text
             local style = serial == select_num and "{\\c&HFFDE7F&}" or "{\\c&HCCCCCC&}"
             local item_config = { text = text, style = style }
@@ -834,11 +834,11 @@ function open_style_menu_get(query, indicator)
         table.insert(menu_log, { text = ("-"):rep(33), style = "{\\c&H888888&}" })
         if select_num == 0 then
             table.insert(menu_log, {
-                text = "注: 样式更改仅在本次播放生效",
+                text = "Remarque : les changements de style ne valent que pour cette lecture",
                 style = "{\\c&HFFDE7F&}"
             })
             table.insert(menu_log, {
-                text = "提示: 输入【w】可上移选项，【s】可下移选项",
+                text = "Conseil : saisissez « w » pour monter et « s » pour descendre",
                 style = "{\\c&H999999&}"
             })
         else
@@ -846,24 +846,24 @@ function open_style_menu_get(query, indicator)
             local config = menu_items_config[select_query]
             local suffix = ""
             if config and config.hint ~= config.original then
-                suffix = "（输入\\r恢复默认配置）"
+                suffix = " (saisissez \\r pour rétablir la valeur par défaut)"
             end
-            input_text = string.format("已输入%s: %s", suffix, input_text)
+            input_text = string.format("Saisie%s : %s", suffix, input_text)
 
             local scope = config and config.footnote or ""
-            local hint_text = select_query == "bold" and "提示: 输入【y】切换状态" or "提示: " .. scope
+            local hint_text = select_query == "bold" and "Conseil : saisissez « y » pour changer l’état" or "Conseil : " .. scope
             local hint_style = "{\\c&H999999&}"
             if source and source:lower() == "\\r" then
-                hint_text = string.format("提示: 回车将恢复默认配置 < %s >", config.original)
+                hint_text = string.format("Conseil : Entrée rétablira la valeur par défaut < %s >", config.original)
             end
             if indicator == "refresh" or indicator == "updata" then
                 indicator = ""
-                hint_text = "提示: 样式更改成功"
+                hint_text = "Conseil : Style modifié"
                 hint_style = "{\\c&HFFDE7F&}"
                 mp.add_timeout(1.5, build_menu)
             elseif indicator == "error" then
                 indicator = ""
-                hint_text = "提示: 输入非数字字符或范围出错"
+                hint_text = "Conseil : Saisie non numérique ou hors limites"
                 hint_style = "{\\c&H4C4CC3&}"
                 mp.add_timeout(1.5, build_menu)
             end
@@ -876,7 +876,7 @@ function open_style_menu_get(query, indicator)
 
     input.get({
         keep_open = true,
-        prompt = "请在此输入操作（w/s|上移/下移）: ",
+        prompt = "Saisissez une action (w/s | monter/descendre) : ",
         opened = function() build_menu() end,
         edited = function(text)
             text = text:gsub("^%s*(.-)%s*$", "%1")
@@ -928,23 +928,23 @@ function open_style_menu_uosc(actived, status)
         local config = menu_items_config[key]
         local item_config = {
             title = config.title,
-            hint = "目前：" .. tostring(config.hint),
+            hint = "Actuel : " .. tostring(config.hint),
             active = key == actived,
             keep_open = true,
             selectable = true,
         }
         if config.hint ~= config.original then
             local original_str = tostring(config.original)
-            item_config.actions = {{icon = "refresh", name = key, label = "恢复默认配置 < " .. original_str .. " >"}}
+            item_config.actions = {{icon = "refresh", name = key, label = "Rétablir la valeur par défaut < " .. original_str .. " >"}}
         end
         table.insert(items, item_config)
     end
 
     local menu_props = {
         type = "menu_style",
-        title = "弹幕样式",
+        title = "Style des danmaku",
         search_style = "disabled",
-        footnote = "样式更改仅在本次播放生效",
+        footnote = "Les changements de style ne valent que pour cette lecture",
         item_actions_place = "outside",
         items = items,
         callback = { mp.get_script_name(), 'setup-danmaku-style'},
@@ -954,15 +954,15 @@ function open_style_menu_uosc(actived, status)
     if status ~= nil then
         -- msg.info(status)
         if status == "updata" then
-            -- "updata" 模式会保留输入框文字
+            -- Le mode « updata » conserve le texte du champ
             menu_props.title = "  " .. menu_items_config[actived]["footnote"]
             actions = "update-menu"
         elseif status == "refresh" then
-            -- "refresh" 模式会清除输入框文字
+            -- Le mode « refresh » efface le texte du champ
             menu_props.title = "  " .. menu_items_config[actived]["footnote"]
         elseif status == "error" then
-            menu_props.title = "输入非数字字符或范围出错"
-            -- 创建一个定时器，在1秒后触发回调函数，删除搜索栏错误信息
+            menu_props.title = "Saisie non numérique ou hors limites"
+            -- Crée une minuterie qui efface le message d’erreur du champ après une seconde
             mp.add_timeout(1.0, function() open_style_menu_uosc(actived, "updata") end)
         end
         menu_props.search_style = "palette"
@@ -983,37 +983,37 @@ function open_style_menu(actived, status)
             open_style_menu_get(actived, status)
         end)
     else
-        show_message("无支持可用的 UI框架，不支持使用该功能", 3)
+        show_message("Aucune interface compatible n'est disponible ; cette fonction est indisponible", 3)
     end
 end
 
--- 打开以指定时间为起点的延迟菜单
+-- Ouvre le menu de décalage à partir de l'instant indiqué
 function open_delay_from_time_get(source, time, status)
     mp.commandv('script-message-to', 'console', 'disable')
     local menu_log = {}
 
     local function build_menu(query, input_text)
         menu_log = {
-            { text = "【从该时间起调整弹幕延迟】", style = "{\\c&H00CCFF&\\b1}" },
+            { text = "【Régler le décalage à partir de cet instant】", style = "{\\c&H00CCFF&\\b1}" },
             { text = ("-"):rep(33), style = "{\\c&H888888&}" }
         }
 
         table.insert(menu_log, { text = "\n", style = "" })
-        local hint_text = "提示：请输入数字，单位（秒）/ 或者按照形如\"14m15s\"的格式输入分钟数加秒数"
+        local hint_text = "Saisissez un nombre de secondes, ou une durée au format \"14m15s\""
         local hint_style = "{\\c&H999999&}"
         if status == "error" then
-            hint_text = "提示: 输入非数字字符或范围出错"
+            hint_text = "Conseil : Saisie non numérique ou hors limites"
             hint_style = "{\\c&H4C4CC3&}"
         end
 
-        table.insert(menu_log, { text = input_text and ("已输入：" .. input_text) or "", style = "{\\c&HCCCCCC&}" })
+        table.insert(menu_log, { text = input_text and ("Saisie : " .. input_text) or "", style = "{\\c&HCCCCCC&}" })
         table.insert(menu_log, { text = hint_text, style = hint_style })
         input.set_log(menu_log)
     end
 
     input.get({
         keep_open = true,
-        prompt = "请输入要设置的延迟（秒或 XmYs）: ",
+        prompt = "Saisissez le décalage (secondes ou XmYs) : ",
         opened = function() build_menu() end,
         edited = function(text)
             text = text:gsub("^%s*(.-)%s*$", "%1")
@@ -1039,22 +1039,22 @@ end
 
 function open_delay_from_time_uosc(source, time, status)
     if not uosc_available then
-        show_message("无uosc UI框架，不支持使用该功能", 2)
+        show_message("uosc n'est pas disponible ; cette fonction est indisponible", 2)
         return
     end
 
     local menu_props = {
         type = "menu_delay_from_time",
-        title = "从该时间起调整弹幕延迟",
+        title = "Régler le décalage à partir de cet instant",
         search_style = "palette",
         search_debounce = "submit",
-        footnote = "请输入数字，单位（秒）/ 或者按照形如\"14m15s\"的格式输入分钟数加秒数",
+        footnote = "Saisissez un nombre de secondes, ou une durée au format \"14m15s\"",
         items = {},
         on_search = { "script-message-to", mp.get_script_name(), "setup-content-delay", tostring(time), tostring(source) },
     }
 
     if status == "error" then
-    menu_props.title = "输入非数字字符或范围出错"
+    menu_props.title = "Saisie non numérique ou hors limites"
     mp.add_timeout(1.0, function() open_delay_from_time_uosc(source, time) end)
     end
 
@@ -1070,11 +1070,11 @@ function open_delay_from_time(source, time, status)
             open_delay_from_time_get(source, time, status)
         end)
     else
-        show_message("无支持可用的 UI框架，不支持使用该功能", 3)
+        show_message("Aucune interface compatible n'est disponible ; cette fonction est indisponible", 3)
     end
 end
 
--- 设置弹幕源延迟菜单
+-- Configure le menu de décalage des sources
 function open_delay_menu_get(source, status)
     mp.commandv('script-message-to', 'console', 'disable')
     local menu_log = {}
@@ -1088,7 +1088,7 @@ function open_delay_menu_get(source, status)
 
     local function build_menu(query, text)
         menu_log = {
-            { text = "【弹幕源延迟菜单】", style = "{\\c&H00CCFF&\\b1}" },
+            { text = "【Décalage des sources de danmaku】", style = "{\\c&H00CCFF&\\b1}" },
             { text = ("-"):rep(33), style = "{\\c&H888888&}" }
         }
 
@@ -1106,7 +1106,7 @@ function open_delay_menu_get(source, status)
                         end
                     end
                 end
-                local hint = "当前弹幕源延迟: " .. string.format("%.1f", delay + 1e-10) .. "秒"
+                local hint = "Décalage actuel de la source : " .. string.format("%.1f", delay + 1e-10) .. " s"
                 local text = string.format("  [%02d] %s   [%s] ", serial, url, hint)
                 local style = (serial == select_num) and "{\\c&HFFDE7F&}" or "{\\c&HCCCCCC&}"
                 table.insert(menu_log, { text = text, style = style })
@@ -1114,29 +1114,29 @@ function open_delay_menu_get(source, status)
             end
         end
         if serial == 0 then
-            table.insert(menu_log, { text = "        无", style = "" })
+            table.insert(menu_log, { text = "        Aucune", style = "" })
         end
 
         table.insert(menu_log, { text = ("-"):rep(33), style = "{\\c&H888888&}" })
         if select_num == 0 then
             table.insert(menu_log, { text = "\n", style = "" })
             table.insert(menu_log, {
-                text = "提示: 输入【w】可上移选项，【s】可下移选项",
+                text = "Conseil : saisissez « w » pour monter et « s » pour descendre",
                 style = "{\\c&H999999&}"
             })
         else
-            local input_text = "已输入：" .. (text ~= nil and text or "")
+            local input_text = "Saisie : " .. (text ~= nil and text or "")
 
-            local hint_text = "提示：请输入数字，单位（秒）/ 或者按照形如\"14m15s\"的格式输入分钟数加秒数"
+            local hint_text = "Saisissez un nombre de secondes, ou une durée au format \"14m15s\""
             local hint_style = "{\\c&H999999&}"
             if status == "refresh" then
                 status = ""
-                hint_text = "提示: 样式更改成功"
+                hint_text = "Conseil : Style modifié"
                 hint_style = "{\\c&HFFDE7F&}"
                 mp.add_timeout(1.5, build_menu)
             elseif status == "error" then
                 status = ""
-                hint_text = "提示: 输入非数字字符或范围出错"
+                hint_text = "Conseil : Saisie non numérique ou hors limites"
                 hint_style = "{\\c&H4C4CC3&}"
                 mp.add_timeout(1.5, build_menu)
             end
@@ -1150,7 +1150,7 @@ function open_delay_menu_get(source, status)
 
     input.get({
         keep_open = true,
-        prompt = "请在此输入操作（w/s|上移/下移）: ",
+        prompt = "Saisissez une action (w/s | monter/descendre) : ",
         opened = function() build_menu() end,
         edited = function(text)
             text = text:gsub("^%s*(.-)%s*$", "%1")
@@ -1186,7 +1186,7 @@ end
 
 function open_delay_menu_uosc(source_url, status)
     if not uosc_available then
-        show_message("无uosc UI框架，不支持使用该功能", 2)
+        show_message("uosc n'est pas disponible ; cette fonction est indisponible", 2)
         return
     end
 
@@ -1203,7 +1203,7 @@ function open_delay_menu_uosc(source_url, status)
                 end
             end
             local item = {title = utf8_sub(url, 1, 100), value = url, keep_open = true,}
-            item.hint = "当前弹幕源延迟:" .. string.format("%.1f", delay + 1e-10) .. "秒"
+            item.hint = "Décalage actuel de la source : " .. string.format("%.1f", delay + 1e-10) .. " s"
             item.active = url == source_url
             table.insert(sources, item)
         end
@@ -1211,18 +1211,18 @@ function open_delay_menu_uosc(source_url, status)
 
     local menu_props = {
         type = "menu_delay",
-        title = "弹幕源延迟设置",
+        title = "Décalage des sources de danmaku",
         search_style = "disabled",
         items = sources,
         callback = {mp.get_script_name(), 'setup-source-delay'},
     }
     if source_url ~= nil then
         if status == "error" then
-            menu_props.title = "输入非数字字符或范围出错"
-            -- 创建一个定时器，在1秒后触发回调函数，删除搜索栏错误信息
+            menu_props.title = "Saisie non numérique ou hors limites"
+            -- Crée une minuterie qui efface le message d’erreur du champ après une seconde
             mp.add_timeout(1.0, function() open_delay_menu_uosc(source_url) end)
         else
-            menu_props.title = "请输入数字，单位（秒）/ 或者按照形如\"14m15s\"的格式输入分钟数加秒数"
+            menu_props.title = "Saisissez un nombre de secondes, ou une durée au format \"14m15s\""
         end
         menu_props.search_style = "palette"
         menu_props.search_debounce = "submit"
@@ -1241,17 +1241,17 @@ function open_delay_menu(source, status)
             open_delay_menu_get(source, status)
         end)
     else
-        show_message("无支持可用的 UI框架，不支持使用该功能", 3)
+        show_message("Aucune interface compatible n'est disponible ; cette fonction est indisponible", 3)
     end
 end
 
--- 总集合弹幕菜单
+-- Menu principal des danmaku
 local total_menu_items_config = {
-    { title = "弹幕搜索", action = "open_search_danmaku_menu" },
-    { title = "从源添加弹幕", action = "open_add_source_menu" },
-    { title = "弹幕源延迟设置", action = "open_source_delay_menu" },
-    { title = "弹幕样式", action = "open_danmaku_style_menu" },
-    { title = "弹幕内容", action = "open_content_danmaku_menu" },
+    { title = "Rechercher des danmaku", action = "open_search_danmaku_menu" },
+    { title = "Ajouter des danmaku depuis une source", action = "open_add_source_menu" },
+    { title = "Décalage des sources de danmaku", action = "open_source_delay_menu" },
+    { title = "Style des danmaku", action = "open_danmaku_style_menu" },
+    { title = "Contenu des danmaku", action = "open_content_danmaku_menu" },
 }
 
 function open_add_total_menu_uosc()
@@ -1261,7 +1261,7 @@ function open_add_total_menu_uosc()
         local episode = DANMAKU.episode:gsub("%s.-$","")
         episode = episode:match("^(第.*[话回集]+)%s*") or episode
         items[#items + 1] = {
-            title = string.format("已关联弹幕：%s-%s", DANMAKU.anime, episode),
+            title = string.format("Danmaku associés : %s-%s", DANMAKU.anime, episode),
             bold = true,
             italic = true,
             keep_open = true,
@@ -1280,7 +1280,7 @@ function open_add_total_menu_uosc()
 
     local menu_props = {
         type = "menu_total",
-        title = "弹幕设置",
+        title = "Paramètres des danmaku",
         search_style = "disabled",
         items = items,
     }
@@ -1297,7 +1297,7 @@ function open_add_total_menu_select()
 
     mp.commandv('script-message-to', 'console', 'disable')
     input.select({
-        prompt = '选择:',
+        prompt = 'Sélectionner :',
         items = item_titles,
         submit = function(id)
             local cmd = item_values[id]
@@ -1328,7 +1328,7 @@ mp.commandv(
     "danmaku",
     utils.format_json({
         icon = "search",
-        tooltip = "弹幕搜索",
+        tooltip = "Rechercher des danmaku",
         command = "script-message open_search_danmaku_menu",
     })
 )
@@ -1340,7 +1340,7 @@ mp.commandv(
     "danmaku_source",
     utils.format_json({
         icon = "add_box",
-        tooltip = "从源添加弹幕",
+        tooltip = "Ajouter des danmaku depuis une source",
         command = "script-message open_add_source_menu",
     })
 )
@@ -1352,7 +1352,7 @@ mp.commandv(
     "danmaku_styles",
     utils.format_json({
         icon = "palette",
-        tooltip = "弹幕样式",
+        tooltip = "Style des danmaku",
         command = "script-message open_danmaku_style_menu",
     })
 )
@@ -1364,7 +1364,7 @@ mp.commandv(
     "danmaku_delay",
     utils.format_json({
         icon = "more_time",
-        tooltip = "弹幕源延迟设置",
+        tooltip = "Décalage des sources de danmaku",
         command = "script-message open_source_delay_menu",
     })
 )
@@ -1376,7 +1376,7 @@ mp.commandv(
     "danmaku_menu",
     utils.format_json({
         icon = "grid_view",
-        tooltip = "弹幕设置",
+        tooltip = "Paramètres des danmaku",
         command = "script-message open_add_total_menu",
     })
 )
@@ -1403,7 +1403,7 @@ mp.register_script_message("set", function(prop, value)
             show_danmaku_func()
         end
     else
-        show_message("关闭弹幕", 2)
+        show_message("Masquer les danmaku", 2)
         ENABLED = false
         hide_danmaku_func()
     end
@@ -1411,7 +1411,7 @@ mp.register_script_message("set", function(prop, value)
     toggle_danmaku_switch(value)
 end)
 
--- 注册函数给 uosc 按钮使用
+-- Enregistre les fonctions utilisées par les boutons uosc
 mp.register_script_message("search-anime-event", function(query)
     perform_cancel_active_request()
     if uosc_available then
@@ -1489,14 +1489,14 @@ end)
 mp.register_script_message("setup-danmaku-style", function(query, text)
     local event = utils.parse_json(query)
     if event ~= nil then
-        -- item点击 或 图标点击
+        -- Clic sur un élément ou une icône
         if event.type == "activate" then
             if not event.action then
                 if ordered_keys[event.index] == "bold" then
                     options.bold = not options.bold
                     menu_items_config.bold.hint = options.bold and "true" or "false"
                 end
-                -- "updata" 模式会保留输入框文字
+                -- Le mode « updata » conserve le texte du champ
                 open_style_menu(ordered_keys[event.index], "updata")
                 return
             else
@@ -1510,23 +1510,23 @@ mp.register_script_message("setup-danmaku-style", function(query, text)
             end
         end
     else
-        -- 数值输入
+        -- Saisie numérique
         if text == nil or text == "" then
             return
         end
-        local newText, _ = text:gsub("%s", "") -- 移除所有空白字符
+        local newText, _ = text:gsub("%s", "") -- Supprime tous les espaces
         if tonumber(newText) ~= nil and menu_items_config[query]["scope"] ~= nil then
             local num = tonumber(newText)
             local min_num = menu_items_config[query]["scope"]["min"]
             local max_num = menu_items_config[query]["scope"]["max"]
             if num and min_num <= num and num <= max_num then
-                if string.match(menu_items_config[query]["footnote"], "整数") then
-                    -- 输入范围为整数时向下取整
+                if string.match(menu_items_config[query]["footnote"], "entier") then
+                    -- Arrondit à l'entier inférieur lorsque la plage impose un entier
                     num = tostring(math.floor(num))
                 end
                 options[query] = tostring(num)
                 menu_items_config[query]["hint"] = options[query]
-                -- "refresh" 模式会清除输入框文字
+                -- Le mode « refresh » efface le texte du champ
                 open_style_menu(query, "refresh")
                 if query == "fontsize" or query == "scrolltime" then
                     load_danmaku(true, true)
@@ -1571,12 +1571,12 @@ end)
 mp.register_script_message("setup-source-delay", function(query, text)
     local event = utils.parse_json(query)
     if event ~= nil then
-        -- item点击
+        -- Clic sur un élément
         if event.type == "activate" then
             open_delay_menu(event.value)
         end
     else
-        -- 数值输入
+        -- Saisie numérique
         if text == nil or text == "" then
             return
         end
@@ -1607,7 +1607,7 @@ mp.register_script_message('handle-danmaku-content-action', function(json)
             mp.commandv("script-message-to", "uosc", "close-menu", "menu_content")
             load_danmaku(true)
         elseif event.action == "adjust_delay" then
-            -- 打开以该弹幕时间为起点的延迟菜单（该延迟将作用于该时间点及之后的弹幕），仅针对该条弹幕的 source
+            -- Ouvre le menu de décalage à partir de ce danmaku ; le décalage s'applique ensuite uniquement à sa source
             mp.commandv("script-message", "open_content_delay_menu", d.source, tostring(d.start_time))
         end
     else

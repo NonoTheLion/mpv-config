@@ -97,7 +97,7 @@ local function try_decompress_file(path)
     f:close()
     if not data or #data == 0 then return nil, 'empty' end
     local b1,b2 = data:byte(1,2)
-    -- zip archive (PK..)
+    -- Archive ZIP (PK..)
     if b1 == 0x50 and b2 == 0x4b then
         local bs = inflate.new(data)
         if bs then
@@ -109,7 +109,7 @@ local function try_decompress_file(path)
             end
         end
     end
-    -- gzip
+    -- Flux gzip
     if b1 == 0x1f and b2 == 0x8b then
         local function parse_gzip_start(d)
             local flg = d:byte(4) or 0
@@ -141,7 +141,7 @@ local function try_decompress_file(path)
             end
         end
     end
-    -- zlib (check header checksum mod31)
+    -- Flux zlib (vérifie la somme de contrôle mod31 de l'en-tête)
     if ((b1*256 + (b2 or 0)) % 31) == 0 and #data > 6 then
         local deflated = data:sub(3, #data - 4)
         local bs = inflate.new(deflated)
@@ -150,13 +150,13 @@ local function try_decompress_file(path)
             if res then return res end
         end
     end
-    -- fallback: return raw data
+    -- En dernier recours, renvoie les données brutes
     return data
 end
 
 local function save_output_and_load(output_table, source_url)
     if #output_table == 0 then
-        show_message('未获取到任何弹幕', 3)
+        show_message('Aucun danmaku récupéré', 3)
         return
     end
     local final_json_str = utils.format_json(output_table)
@@ -164,7 +164,7 @@ local function save_output_and_load(output_table, source_url)
     load_danmaku(true)
 end
 
--- 辅助函数：构造 curl 参数
+-- Fonction auxiliaire : construit les paramètres curl
 local function build_args_for_server(server, referer)
     local headers = {
         'Referer: ' .. (referer or ''),
@@ -178,10 +178,10 @@ local function build_args_for_server(server, referer)
     return args
 end
 
--- 辅助函数：处理单个分段的响应并解压解析
+-- Fonction auxiliaire : traite, décompresse et analyse la réponse d'un segment
 local function handle_server_response(server, err, out, output_table, servers, referer)
     if err then
-        msg.warn('请求弹幕段失败: ' .. tostring(server) .. ' 错误: ' .. tostring(err))
+        msg.warn('Échec de la requête du segment de danmaku : ' .. tostring(server) .. ' erreur : ' .. tostring(err))
         return
     end
 
@@ -193,31 +193,31 @@ local function handle_server_response(server, err, out, output_table, servers, r
     if type(server) == 'table' and server.zfile and utils.file_info(server.zfile) then
         local content, derr = try_decompress_file(server.zfile)
         if not content then
-            msg.warn('文件解压失败: ' .. tostring(server.url) .. ' 错误: ' .. tostring(derr))
+            msg.warn('Échec de la décompression du fichier : ' .. tostring(server.url) .. ' erreur : ' .. tostring(derr))
             os.remove(server.zfile)
             return
         end
         if not content or content == '' then
-            msg.warn('文件解压后为空: ' .. tostring(server.url))
+            msg.warn('Le fichier est vide après décompression : ' .. tostring(server.url))
             os.remove(server.zfile)
             return
         end
         if type(content) == 'string' and content:find('<') then
             parse_xml_and_append(content, output_table, #servers)
         else
-            msg.warn('无法解析弹幕段内容: ' .. tostring(server.url))
+            msg.warn("Impossible d'analyser le segment de danmaku : " .. tostring(server.url))
         end
         os.remove(server.zfile)
         return
     end
-    msg.warn('无法处理弹幕段响应: ' .. tostring(server))
+    msg.warn('Impossible de traiter la réponse du segment de danmaku : ' .. tostring(server))
 end
 
--- 辅助函数：处理已知 tvid 的主流程
+-- Fonction auxiliaire : flux principal avec un tvid connu
 local function process_iqiyi_with_tvid(tvid, url, callback)
     get_video_info(tvid, function(videoInfo)
         if not videoInfo then
-            show_message('获取爱奇艺视频信息失败', 3)
+            show_message("Impossible d'obtenir les informations de la vidéo iQIYI", 3)
             callback(false)
             return
         end
@@ -269,19 +269,19 @@ local function process_iqiyi_with_tvid(tvid, url, callback)
     end)
 end
 
--- 为爱奇艺加载弹幕
+-- Charge les danmaku iQIYI
 function load_danmaku_for_iqiyi(path, callback)
     callback = callback or function() end
     local url = path or mp.get_property('stream-open-filename', '')
     if not url or url == '' then
-        msg.error('无有效 URL')
+        msg.error('URL invalide')
         callback(false)
         return
     end
 
     get_tvid_from_url(url, function(tvid)
         if not tvid then
-            show_message('获取爱奇艺 tvid 失败', 3)
+            show_message("Impossible d'obtenir le tvid iQIYI", 3)
             callback(false)
             return
         end

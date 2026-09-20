@@ -3,7 +3,7 @@ local utils = require('mp.utils')
 
 local user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
 
--- 解析多种 time 表示为秒数（支持数字、带小数、HH:MM:SS、MM:SS）
+-- Convertit plusieurs formats de durée en secondes (nombre, décimal, HH:MM:SS, MM:SS)
 local function parse_mgtv_time(time_str)
     if time_str == nil then return 0 end
     if type(time_str) == 'number' then return time_str end
@@ -21,7 +21,7 @@ local function parse_mgtv_time(time_str)
     return 0
 end
 
--- 生成分段请求列表（每段以 ms 为单位的起点）
+-- Génère la liste des requêtes segmentées (début en ms)
 local function generate_mgtv_segments(api_base, total_seconds, step_ms)
     local segments = {}
     local end_time_ms = math.floor(total_seconds * 1000)
@@ -31,7 +31,7 @@ local function generate_mgtv_segments(api_base, total_seconds, step_ms)
     return segments
 end
 
--- 构建通用 curl 请求参数
+-- Construit les paramètres curl communs
 local function build_mgtv_curl_args(target_url)
     local args = {
         'curl', '-s', '-L', '--compressed',
@@ -42,7 +42,7 @@ local function build_mgtv_curl_args(target_url)
     return args
 end
 
--- 解析单个分段返回并把弹幕追加到 output_table
+-- Analyse un segment et ajoute ses danmaku à output_table
 local function parse_mgtv_segment(out, output_table)
     if not out then return end
     local j = utils.parse_json(out)
@@ -60,14 +60,14 @@ end
 
 local function extract_mgtv_ids(path)
     if not path then return nil, nil end
-    -- 常见格式: /b/<cid>/<vid>.html
+    -- Format courant : /b/<cid>/<vid>.html
     local cid, vid = path:match('/b/(%d+)/([%w%._-]+)%.html')
     if cid and vid then
         vid = vid:match('([^.]+)') or vid
         return cid, vid
     end
 
-    -- 回退：取最后两个 path segment
+    -- Solution de secours : prend les deux derniers segments du chemin
     local segs = {}
     for seg in path:gmatch('/([^/]+)') do table.insert(segs, seg) end
     if #segs >= 2 then
@@ -79,18 +79,18 @@ local function extract_mgtv_ids(path)
     return nil, nil
 end
 
--- 为 芒果TV 加载弹幕
+-- Charge les danmaku Mango TV
 function load_danmaku_for_mgtv(path, callback)
     callback = callback or function() end
     local url = path or mp.get_property('stream-open-filename', '')
     if not url or url == '' then
-        msg.error('mgtv: 无效的 url')
+        msg.error('mgtv : URL invalide')
         return
     end
 
     local cid, vid = extract_mgtv_ids(url)
     if not cid or not vid then
-        msg.error('mgtv: 无法解析 cid/vid: ' .. tostring(url))
+        msg.error("mgtv : impossible d'analyser cid/vid : " .. tostring(url))
         return
     end
 
@@ -101,13 +101,13 @@ function load_danmaku_for_mgtv(path, callback)
 
     call_cmd_async(args, function(err, out)
         if err then
-            msg.error('mgtv: 请求 video/info 失败: ' .. tostring(err))
+            msg.error('mgtv : échec de la requête video/info : ' .. tostring(err))
             callback(false)
             return
         end
         local data = utils.parse_json(out)
         if not data or data.code ~= 200 or not data.data or not data.data.info then
-            msg.info('mgtv: video/info 返回无效')
+            msg.info('mgtv : réponse video/info invalide')
             callback(false)
             return
         end
@@ -118,7 +118,7 @@ function load_danmaku_for_mgtv(path, callback)
         local segments = generate_mgtv_segments(api_danmaku_base, total_seconds, step)
 
         if #segments == 0 then
-            msg.info('mgtv: 未生成任何弹幕分段请求')
+            msg.info('mgtv : aucune requête de segment de danmaku générée')
             callback(false)
             return
         end

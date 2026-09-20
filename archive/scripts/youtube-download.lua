@@ -139,7 +139,7 @@ local opts = {
     ]],
 
     -- Used to localize uosc-submenu content
-    -- Must use json format, example for Chinese: [{"Download": "下载","Audio": "音频"}]
+    -- Must use JSON format, example for French: [{"Download": "Télécharger","Audio": "Audio"}]
     locale_content = [[
         []
     ]],

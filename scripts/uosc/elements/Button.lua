@@ -26,10 +26,10 @@ end
 function Button:on_coordinates() self.font_size = round((self.by - self.ay) * 0.7) end
 function Button:handle_cursor_click()
 	if not self.on_click or not self.is_clickable then return end
-	-- We delay the callback to next tick, otherwise we are risking race
-	-- conditions as we are in the middle of event dispatching.
-	-- For example, handler might add a menu to the end of the element stack, and that
-	-- than picks up this click event we are in right now, and instantly closes itself.
+	-- On repousse le rappel au tick suivant, sinon on risque des situations de
+	-- compétition car on se trouve en plein milieu de la distribution des événements.
+	-- Par exemple, le gestionnaire pourrait ajouter un menu à la fin de la pile d'éléments,
+	-- lequel récupérerait alors ce clic en cours de traitement et se refermerait aussitôt.
 	mp.add_timeout(0.01, self.on_click)
 end
 
@@ -47,7 +47,7 @@ function Button:render()
 
 	if is_hover and is_clickable and background_opacity < 0.3 then background_opacity = 0.3 end
 
-	-- Background
+	-- Arrière-plan
 	if background_opacity > 0 then
 		ass:rect(self.ax, self.ay, self.bx, self.by, {
 			color = (self.active or not is_hover) and background or foreground,
@@ -56,10 +56,10 @@ function Button:render()
 		})
 	end
 
-	-- Tooltip on hover
+	-- Infobulle au survol
 	if is_hover and self.tooltip then ass:tooltip(self, self.tooltip) end
 
-	-- Badge
+	-- Pastille
 	local icon_clip
 	if self.badge then
 		local badge_font_size = self.font_size * 0.6
@@ -84,7 +84,7 @@ function Button:render()
 		icon_clip = '\\iclip(' .. clip_path.scale .. ', ' .. clip_path.text .. ')'
 	end
 
-	-- Icon
+	-- Icône
 	local x, y = round(self.ax + (self.bx - self.ax) / 2), round(self.ay + (self.by - self.ay) / 2)
 	ass:icon(x, y, self.font_size, self.icon, {
 		color = foreground,

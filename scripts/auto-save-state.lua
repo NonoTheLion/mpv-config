@@ -1,4 +1,4 @@
--- Runs write-watch-later-config periodically
+-- Exécute périodiquement write-watch-later-config
 
 local options = require 'mp.options'
 local msg = require 'mp.msg'
@@ -11,13 +11,13 @@ options.read_options(o)
 
 local can_delete = true
 local can_save = true
-local path = nil -- only set after file success load, reset to nil when file unload.
+local path = nil -- défini uniquement après le chargement réussi du fichier, remis à nil au déchargement.
 
 local function reset()
     path = nil
 end
 
--- set vars when file success load
+-- initialise les variables au chargement réussi du fichier
 local function init()
     path = mp.get_property("path")
 end
@@ -42,7 +42,7 @@ local function pause_timer_while_paused(_, pause)
     if pause then timer:stop() else timer:resume() end
 end
 
--- save watch-later-config when file unloading
+-- enregistre watch-later-config au déchargement du fichier
 local function save_or_delete()
     if not can_delete then return end
     local eof = mp.get_property_bool("eof-reached")
@@ -67,4 +67,4 @@ mp.observe_property("pause", "bool", pause_timer_while_paused)
 mp.observe_property("pause", "bool", save_if_pause)
 
 mp.register_event("file-loaded", init)
-mp.add_hook("on_unload", 50, save_or_delete) -- after mpv saving state
+mp.add_hook("on_unload", 50, save_or_delete) -- après l'enregistrement de l'état par mpv

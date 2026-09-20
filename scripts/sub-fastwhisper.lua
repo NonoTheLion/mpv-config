@@ -10,54 +10,54 @@ local msg = require 'mp.msg'
 local utils = require 'mp.utils'
 local options = require "mp.options"
 
----- Script Options ----
+---- Options du script ----
 local o = {
-    -- Path to the faster-whisper executable, you can download it from here:
+    -- Chemin vers l'exécutable faster-whisper, téléchargeable ici :
     -- https://github.com/Purfview/whisper-standalone-win
-    -- Supports absolute and relative paths
+    -- Accepte les chemins absolus et relatifs
     fast_whisper_path = "faster-whisper",
-    -- Model to use, available models are: base, small，medium, large, large-v2, large-v3, turbo
+    -- Modèle à utiliser, modèles disponibles : base, small，medium, large, large-v2, large-v3, turbo
     model = "base",
-    -- Device to use, available devices are: cpu, cuda
+    -- Périphérique à utiliser, périphériques disponibles : cpu, cuda
     device = "cpu",
-    -- Compute type to use, 
-    -- available types are: default,auto,int8,int8_float16,int8_float32,int8_bfloat16,int16,float16,float32,bfloat16
+    -- Type de calcul à utiliser,
+    -- types disponibles : default,auto,int8,int8_float16,int8_float32,int8_bfloat16,int16,float16,float32,bfloat16
     compute_type = "default",
-    -- Specify the language of transcription
-    -- Leave it blank and it will be automatically detected
+    -- Indique la langue de la transcription
+    -- Laisser vide pour une détection automatique
     language = "",
-    -- Number of cpu threads to use
-    -- Default value is 0 will auto-detect but max 4 threads
+    -- Nombre de threads processeur à utiliser
+    -- La valeur par défaut 0 active la détection automatique, mais avec 4 threads au maximum
     threads = "0",
-    -- The maximum number of characters in a line before breaking the line
+    -- Nombre maximal de caractères sur une ligne avant le passage à la ligne
     max_line_width = "100",
-    -- Specify output path, supports absolute and relative paths
-    -- Special value: "source" saves the subtitle file to the directory 
-    -- where the video file is located
+    -- Chemin de sortie, accepte les chemins absolus et relatifs
+    -- Valeur spéciale : « source » enregistre le fichier de sous-titres dans le
+    -- répertoire du fichier vidéo
     output_path = "source",
-    -- Specify how many subtitles are generated before updating
-    -- to avoid frequent flickering of subtitles
+    -- Nombre de sous-titres à générer avant chaque mise à jour,
+    -- afin d'éviter un scintillement fréquent des sous-titres
     update_interval = 20,
-    -- Uses segmentation for speech transcription, 
-    -- which significantly improves the speed of subtitle initialization.
-    -- but it will reduce the accuracy and overall speed of subtitle generation, 
-    -- which is more suitable for long video scenarios.
-    --! Depends on FFmpeg
+    -- Découpe l'audio en segments pour la transcription,
+    -- ce qui accélère nettement l'apparition des premiers sous-titres,
+    -- mais réduit la précision et la vitesse globale de génération ;
+    -- plutôt adapté aux vidéos longues.
+    --! Dépend de FFmpeg
     use_segment = false,
-    -- Segment duration in seconds
+    -- Durée d'un segment en secondes
     segment_duration = 10,
-    ---- GPT API Options ----
-    -- Compatible with other AI API with the same structure as the GPT API
+    ---- Options de l'API GPT ----
+    -- Compatible avec toute autre API d'IA ayant la même structure que l'API GPT
     api_url = "https://api.openai.com/v1/chat/completions",
     api_key = "",
     api_mode = "gpt-4o",
     api_temperature = 0.7,
-    -- Rate per minute used by the API
-    -- See the corresponding API documentation for instructions
+    -- Débit par minute autorisé par l'API
+    -- Voir la documentation de l'API correspondante pour plus de précisions
     api_rate = 15,
-    -- Translation target language
+    -- Langue cible de la traduction
     translate = "Chinese",
-    -- Specify the font to be used for the generated ass captions
+    -- Police à utiliser pour les sous-titres ass générés
     font_name = "sans-serif",
 }
 
@@ -274,14 +274,14 @@ local function shift_subtitle_timestamps(temp_srt, srt_file, subtitle_count, sta
     local main_file = io.open(srt_file, "a")
 
     if not temp_file or not main_file then
-        msg.error("Failed to open temporary or main SRT file.")
+        msg.error("Impossible d'ouvrir le fichier SRT temporaire ou principal.")
         return subtitle_count
     end
 
     local subtitle_number = subtitle_count
     if subtitle_number == 1 then
-        mp.osd_message("AI subtitles are loaded and updated in real time", 5)
-        msg.info("AI subtitles are loaded and updated in real time")
+        mp.osd_message("Sous-titres IA chargés et mis à jour en temps réel", 5)
+        msg.info("Sous-titres IA chargés et mis à jour en temps réel")
     end
     for line in temp_file:lines() do
         if line:match("%d+:%d+:%d+,%d+%D+%d+:%d+:%d+,%d+") then
@@ -306,7 +306,7 @@ local function shift_subtitle_timestamps(temp_srt, srt_file, subtitle_count, sta
     return subtitle_number
 end
 
--- Merge two subtitles
+-- Fusionne deux jeux de sous-titres
 local function merge_subtitles(sub1, sub2)
     local merged = {}
     local used1, used2 = {}, {}
@@ -352,7 +352,7 @@ local function merge_subtitles(sub1, sub2)
     return merged
 end
 
--- Generating ASS subtitles files
+-- Génère le fichier de sous-titres ASS
 local function generate_ass(subtitles_file)
     local ass_name = string.format(".%s.ass", o.translate)
     local translated_file = subtitles_file:gsub("%.srt$", ".translate.srt")
@@ -401,10 +401,10 @@ local function generate_ass(subtitles_file)
     append_sub(merge_file)
 end
 
--------------Translation function----------------
--- Call the GPT API
+-------------Fonction de traduction----------------
+-- Appelle l'API GPT
 local function call_gpt_api(subtitles, callback)
-    msg.info("AI subtitle translation in progress")
+    msg.info("Traduction IA des sous-titres en cours")
     local prompt = string.format("You are a professional translation assistant, " ..
     "Translate the following subtitles from the original language to %s.", o.translate)
 
@@ -441,7 +441,7 @@ local function call_gpt_api(subtitles, callback)
         })
 
         if not result or result.status ~= 0 then
-            msg.info("API request failed: " .. (result.stderr or "Unknown error"))
+            msg.info("Échec de la requête API : " .. (result.stderr or "Erreur inconnue"))
             return nil
         end
 
@@ -449,7 +449,7 @@ local function call_gpt_api(subtitles, callback)
         if response and response.choices and #response.choices > 0 then
             return response.choices[1].message.content
         else
-            msg.info("Unable to parse API response")
+            msg.info("Impossible d'analyser la réponse de l'API")
             return nil
         end
     end
@@ -462,7 +462,7 @@ local function call_gpt_api(subtitles, callback)
         capture_stderr = true,
     }, function(success, result, error)
         if not success or result.status ~= 0 then
-            msg.info("API request failed: " .. (result.stderr or "Unknown error"))
+            msg.info("Échec de la requête API : " .. (result.stderr or "Erreur inconnue"))
             callback(nil)
             return
         end
@@ -471,7 +471,7 @@ local function call_gpt_api(subtitles, callback)
         if response and response.choices and #response.choices > 0 then
             callback(response.choices[1].message.content)
         else
-            msg.info("Unable to parse API response")
+            msg.info("Impossible d'analyser la réponse de l'API")
             callback(nil)
         end
     end)
@@ -481,11 +481,11 @@ local function call_gpt_api(subtitles, callback)
     end
 end
 
--- Parse .srt file
+-- Analyse un fichier .srt
 local function parse_srt(file_path)
     local file = io.open(file_path, "r")
     if not file then
-        msg.error("Unable to open file: " .. file_path)
+        msg.error("Impossible d'ouvrir le fichier : " .. file_path)
         return nil
     end
 
@@ -515,7 +515,7 @@ local function parse_srt(file_path)
     return subtitles
 end
 
--- Translate subtitles and write to file
+-- Traduit les sous-titres et les écrit dans un fichier
 local function translate_and_write(subtitles, subtitles_file)
     local batch_size = 20
     local max_calls_per_minute = o.api_rate
@@ -523,7 +523,7 @@ local function translate_and_write(subtitles, subtitles_file)
     local translated_file = subtitles_file:gsub("%.srt$", ".translate.srt")
     local total_batches = math.ceil(#subtitles / batch_size)
 
-    -- Dynamically calculate parallelism
+    -- Calcule dynamiquement le degré de parallélisme
     local function calculate_parallel_calls()
         local available_time = 60
         local required_time_per_call = delay_between_calls
@@ -531,58 +531,58 @@ local function translate_and_write(subtitles, subtitles_file)
         return math.min(max_parallel_calls, 4)
     end
 
-    -- Process each batch of translations in parallel
+    -- Traite en parallèle chaque lot de traduction
     local function process_batch(batch_start_index)
-        -- Calculate the end index for the current batch
+        -- Calcule l'index de fin du lot courant
         local end_index = math.min(batch_start_index + batch_size - 1, #subtitles)
         local batch = {}
 
-        -- Combine timestamp and subtitle text
+        -- Associe l'horodatage et le texte du sous-titre
         for i = batch_start_index, end_index do
             local subtitle = subtitles[i]
-            -- Only process untranslated subtitles
+            -- Ne traite que les sous-titres non traduits
             if not translated_cache[subtitle.timestamp] and not progress_cache[subtitle.timestamp] then
                 table.insert(batch, subtitle.timestamp .. " | " .. subtitle.text)
-                progress_cache[subtitle.timestamp] = true  -- Mark as in translation
+                progress_cache[subtitle.timestamp] = true  -- Marque comme en cours de traduction
             end
         end
 
-        -- Skip the batch if no new subtitles need translation
+        -- Ignore le lot si aucun nouveau sous-titre n'est à traduire
         if #batch == 0 then
-            msg.debug("No new subtitles to translate for batch: " .. batch_start_index .. " to " .. end_index)
+            msg.debug("Aucun nouveau sous-titre à traduire pour le lot : " .. batch_start_index .. " à " .. end_index)
             return
         end
 
-        -- Combine the batch into a single string
+        -- Regroupe le lot en une seule chaîne
         local batch_text = table.concat(batch, "\n")
 
-        -- Call GPT API for asynchronous translation
+        -- Appelle l'API GPT pour une traduction asynchrone
         local cancel = call_gpt_api(batch_text, function(translated_text)
-            -- Handle API call failure
+            -- Gère l'échec de l'appel à l'API
             if not translated_text then
-                msg.warn("Translation failed, skipping current batch")
+                msg.warn("Échec de la traduction, lot courant ignoré")
                 translated_text = batch_text
             end
 
-            -- Split the translated text into lines
+            -- Découpe le texte traduit en lignes
             local translated_lines = {}
             for line in translated_text:gmatch("[^\r\n]+") do
                 table.insert(translated_lines, line)
             end
 
-            -- Ensure the number of translated lines matches the original batch
+            -- Vérifie que le nombre de lignes traduites correspond au lot d'origine
             if #translated_lines ~= #batch then
-                msg.warn("Mismatch: Original=" .. #batch .. ", Translated=" .. #translated_lines)
+                msg.warn("Incohérence : original=" .. #batch .. ", traduit=" .. #translated_lines)
             end
 
-            -- Open the file for appending the translated subtitles
+            -- Ouvre le fichier pour y ajouter les sous-titres traduits
             local file = io.open(translated_file, "a")
             if not file then
-                msg.error("Unable to open file: " .. translated_file)
+                msg.error("Impossible d'ouvrir le fichier : " .. translated_file)
                 return
             end
 
-            -- Write the translated subtitles to the file
+            -- Écrit les sous-titres traduits dans le fichier
             local latest_content = {}
             local current_index = batch_start_index
             for i = 1, #translated_lines do
@@ -593,7 +593,7 @@ local function translate_and_write(subtitles, subtitles_file)
                     text = text:gsub("^%s*|%s*", ""):gsub("^%s*(.-)%s*$", "%1")
                 end
 
-                -- Handle translation failure
+                -- Gère l'échec de la traduction
                 if not timestamp or not text or text == "" then
                     local subtitle = subtitles[batch_start_index + i - 1]
                     if subtitle then
@@ -611,7 +611,7 @@ local function translate_and_write(subtitles, subtitles_file)
                         local end_time = format_time(end_time_srt)
                         timestamp = start_time .. " --> " .. end_time
                     else
-                        msg.warn("Invalid timestamp: " .. timestamp)
+                        msg.warn("Horodatage invalide : " .. timestamp)
                     end
 
                     latest_content[timestamp] = text
@@ -619,11 +619,11 @@ local function translate_and_write(subtitles, subtitles_file)
             end
 
             for timestamp, text in pairs(latest_content) do
-                -- Cache the translated result
+                -- Met en cache le résultat traduit
                 translated_cache[timestamp] = text
-                -- Remove from the in-progress cache
+                -- Retire de la liste des traductions en cours
                 progress_cache[timestamp] = nil
-                -- Write to file
+                -- Écrit dans le fichier
                 file:write(current_index .. "\n")
                 file:write(timestamp .. "\n")
                 file:write(text .. "\n\n")
@@ -631,37 +631,37 @@ local function translate_and_write(subtitles, subtitles_file)
             end
             file:close()
 
-            -- Update translated batch count
+            -- Met à jour le nombre de lots traduits
             translated_batches_count = translated_batches_count + 1
-            msg.info("Translated and written batch: " .. batch_start_index .. " to " .. end_index)
-            -- Add the translated subtitles
+            msg.info("Lot traduit et écrit : " .. batch_start_index .. " à " .. end_index)
+            -- Ajoute les sous-titres traduits
             append_sub(translated_file)
             generate_ass(subtitles_file)
 
-            -- Update in-progress batch count
+            -- Met à jour le nombre de lots en cours
             in_progress_batches = in_progress_batches - 1
 
-            -- Check if all subtitles have been translated
+            -- Vérifie si tous les sous-titres ont été traduits
             if translated_batches_count == total_batches then
-                msg.info("Subtitle translation completed!")
+                msg.info("Traduction des sous-titres terminée !")
                 append_sub(translated_file)
                 generate_ass(subtitles_file)
             end
         end)
 
-        -- Increase in-progress batch count
+        -- Incrémente le nombre de lots en cours
         in_progress_batches = in_progress_batches + 1
     end
 
     while start_index <= #subtitles do
         local max_parallel_calls = calculate_parallel_calls()
 
-        -- Wait for available slots for parallel processing
+        -- Attend qu'une place se libère pour le traitement parallèle
         if in_progress_batches < max_parallel_calls then
             process_batch(start_index)
             start_index = start_index + batch_size
         else
-            -- If maximum parallel translations reached, wait before trying again
+            -- Si le nombre maximal de traductions parallèles est atteint, patienter avant de réessayer
             mp.add_timeout(delay_between_calls, function()
                 translate_and_write(subtitles, subtitles_file)
             end)
@@ -672,7 +672,7 @@ local function translate_and_write(subtitles, subtitles_file)
     start_index = #subtitles + 1
 end
 
--- Translate .srt file
+-- Traduit un fichier .srt
 local function translate_srt_file(subtitles_file)
     if not o.api_key then return end
     if not subtitles_file then
@@ -682,14 +682,14 @@ local function translate_srt_file(subtitles_file)
         return
     end
 
-    -- Parse the original subtitle file
+    -- Analyse le fichier de sous-titres d'origine
     local subtitles = parse_srt(subtitles_file)
     if not subtitles then
-        msg.error("Failed to parse .srt file")
+        msg.error("Échec de l'analyse du fichier .srt")
         return
     end
 
-    -- Start translating
+    -- Démarre la traduction
     translate_and_write(subtitles, subtitles_file)
 end
 --------------------------------------------------

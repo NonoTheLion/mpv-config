@@ -1,6 +1,6 @@
 --[[
-    Fixed A/V sync when switching the audio output device with using audio filters
-    available at: https://github.com/dyphire/mpv-scripts
+    Corrige la synchronisation audio/vidéo lors du changement de périphérique de sortie audio avec des filtres audio actifs
+    disponible sur : https://github.com/dyphire/mpv-scripts
 ]]--
 
 local msg = require "mp.msg"
@@ -11,7 +11,7 @@ end
 
 local function fix_avsync()
     local paused = mp.get_property_bool("pause")
-    msg.info("fix A/V sync.")
+    msg.info("correction de la synchronisation A/V.")
     mp.commandv("frame-back-step")
     if paused then
         return

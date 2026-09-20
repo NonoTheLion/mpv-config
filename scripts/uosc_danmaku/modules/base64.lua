@@ -24,7 +24,7 @@
 
 local base64 = {}
 
-local extract = _G.bit32 and _G.bit32.extract -- Lua 5.2/Lua 5.3 in compatibility mode
+local extract = _G.bit32 and _G.bit32.extract -- Lua 5.2/Lua 5.3 en mode de compatibilité
 if not extract then
 	if _G.bit then -- LuaJIT
 		local shl, shr, band = _G.bit.lshift, _G.bit.rshift, _G.bit.band

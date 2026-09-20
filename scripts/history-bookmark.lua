@@ -8,7 +8,7 @@ local msg = require 'mp.msg' -- this is for debugging
 
 local o = {
     enabled = true,
-    -- eng=English, chs=Chinese Simplified
+    -- eng=anglais, chs=français
     language = 'eng',
     timeout = 15,
     save_period = 30,
@@ -48,9 +48,9 @@ local locals = {
         msg3 = 'Press 1 to confirm, 0 to cancel',
     },
     ['chs'] = {
-        msg1 = '成功恢复上次播放',
-        msg2 = '是否恢复当前目录的上次播放文件',
-        msg3 = '按1确认，按0取消',
+        msg1 = 'Dernière lecture reprise',
+        msg2 = 'Reprendre le dernier fichier lu dans le dossier actuel ?',
+        msg3 = 'Appuyez sur 1 pour confirmer ou sur 0 pour annuler',
     }
 }
 

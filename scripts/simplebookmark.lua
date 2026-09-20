@@ -5,75 +5,75 @@
 -- Version: 1.3.0
 
 local o = {
----------------------------USER CUSTOMIZATION SETTINGS---------------------------
---These settings are for users to manually change some options.
---Changes are recommended to be made in the script-opts directory.
+---------------------------PARAMETRES DE PERSONNALISATION UTILISATEUR---------------------------
+--Ces paramètres permettent de modifier manuellement certaines options.
+--Il est recommandé de faire les modifications dans le répertoire script-opts.
 
-	-----Script Settings----
-	--Available filters: 'all', 'keybinds', 'groups', 'recents', 'distinct', 'protocols', 'fileonly', 'titleonly', 'timeonly', 'keywords'.
-	--Filters description: "all" to display all the items. Or 'groups' to display the list filtered with items added to any group. Or 'keybinds' to display the list filtered with keybind slots. Or "recents" to display recently added items to log without duplicate. Or "distinct" to show recent saved entries for files in different paths. Or "fileonly" to display files saved without time. Or "timeonly" to display files that have time only. Or "keywords" to display files with matching keywords specified in the configuration. Or "playing" to show list of current playing file.
-	--Filters can also be stacked by using %+% or omitted by using %-%. e.g.: "groups%+%keybinds" shows only groups and keybinds, "all%-%groups%-%keybinds" shows all items without groups and without keybinds.
-	--Also defined groups can be called by using /:group%Group Name%
-	auto_run_list_idle = 'none',  --Auto run the list when opening mpv and there is no video / file loaded. none for disabled. Or choose between available filters.
-	load_item_on_startup = 0, --runs a saved entry when mpv starts based on its number. -1 for oldest entry, 1 for latest entry, or select the number to load a specific entry, 0 for disabled
-	toggle_idlescreen = true, --hides OSC idle screen message when opening and closing menu (could cause unexpected behavior if multiple scripts are triggering osc-idlescreen off)
-	resume_offset = -0.65, --change to 0 so item resumes from the exact position, or decrease the value so that it gives you a little preview before loading the resume point
-	osd_messages = true, --true is for displaying osd messages when actions occur. Change to false will disable all osd messages generated from this script
-	bookmark_loads_last_idle = true, --When attempting to bookmark, if there is no video / file loaded, it will instead jump to your last bookmarked item and resume it.
-	bookmark_fileonly_loads_last_idle = true, --When attempting to bookmark fileonly, if there is no video / file loaded, it will instead jump to your last bookmarked item without resuming.
-	mark_bookmark_as_chapter = false, --true is for marking the time as a chapter. false disables mark as chapter behavior.
+	-----Paramètres du script----
+	--Filtres disponibles : 'all', 'keybinds', 'groups', 'recents', 'distinct', 'protocols', 'fileonly', 'titleonly', 'timeonly', 'keywords'.
+	--Description des filtres : "all" affiche tous les éléments. 'groups' affiche la liste filtrée sur les éléments rattachés à un groupe. 'keybinds' affiche la liste filtrée sur les emplacements de raccourci clavier. "recents" affiche les éléments récemment ajoutés au journal, sans doublon. "distinct" affiche la dernière entrée enregistrée pour des fichiers de chemins différents. "fileonly" affiche les fichiers enregistrés sans position temporelle. "timeonly" affiche les fichiers qui ont uniquement une position temporelle. "keywords" affiche les fichiers correspondant aux mots-clés définis dans la configuration. "playing" affiche la liste du fichier en cours de lecture.
+	--Les filtres peuvent aussi être cumulés avec %+% ou exclus avec %-%. Par exemple : "groups%+%keybinds" n'affiche que les groupes et les raccourcis, "all%-%groups%-%keybinds" affiche tous les éléments sans les groupes ni les raccourcis.
+	--Les groupes définis peuvent également être appelés via /:group%Nom du groupe%
+	auto_run_list_idle = 'none',  --Ouvre automatiquement la liste au démarrage de mpv lorsqu'aucune vidéo / aucun fichier n'est chargé. none pour désactiver. Sinon, choisir parmi les filtres disponibles.
+	load_item_on_startup = 0, --Charge une entrée enregistrée au démarrage de mpv d'après son numéro. -1 pour l'entrée la plus ancienne, 1 pour la plus récente, ou indiquer le numéro d'une entrée précise, 0 pour désactiver
+	toggle_idlescreen = true, --Masque le message de l'écran d'attente de l'OSC à l'ouverture et à la fermeture du menu (peut provoquer un comportement inattendu si plusieurs scripts désactivent osc-idlescreen)
+	resume_offset = -0.65, --Mettre 0 pour que l'élément reprenne exactement à la position enregistrée, ou diminuer la valeur pour obtenir un petit aperçu avant le point de reprise
+	osd_messages = true, --true affiche les messages OSD lors des actions. false désactive tous les messages OSD générés par ce script
+	bookmark_loads_last_idle = true, --Lors d'une tentative de mise en signet, si aucune vidéo / aucun fichier n'est chargé, saute plutôt au dernier élément mis en signet et reprend sa lecture.
+	bookmark_fileonly_loads_last_idle = true, --Lors d'une tentative de mise en signet du fichier seul, si aucune vidéo / aucun fichier n'est chargé, saute plutôt au dernier élément mis en signet sans reprendre la position.
+	mark_bookmark_as_chapter = false, --true marque la position temporelle comme un chapitre. false désactive ce comportement.
 	bookmark_save_keybind=[[
 	["ctrl+b", "ctrl+B"]
-	]], --Keybind that will be used to save the video and its time to log file
+	]], --Raccourci utilisé pour enregistrer la vidéo et sa position dans le fichier journal
 	bookmark_fileonly_keybind=[[
 	["alt+b", "alt+B"]
-	]], --Keybind that will be used to save the video without time to log file
+	]], --Raccourci utilisé pour enregistrer la vidéo sans position dans le fichier journal
 	open_list_keybind=[[
 	[ ["b", "all"], ["B", "all"], ["k", "keybinds"], ["K", "keybinds"] ]
-	]], --Keybind that will be used to open the list along with the specified filter.
+	]], --Raccourci utilisé pour ouvrir la liste avec le filtre indiqué.
 	list_filter_jump_keybind=[[
 	[ ["b", "all"], ["B", "all"], ["k", "keybinds"], ["K", "keybinds"], ["!", "/:group%TV Shows%"], ["@", "/:group%Movies%"], ["SHARP", "/:group%Anime%"], ["$", "/:group%Anime Movies%"], ["%", "/:group%Cartoon%"], ["r", "recents"], ["R", "recents"], ["d", "distinct"], ["D", "distinct"], ["f", "fileonly"], ["F", "fileonly"] ]
-	]], --Keybind that is used while the list is open to jump to the specific filter (it also enables pressing a filter keybind twice to close list). Available fitlers: 'all', 'keybinds', 'recents', 'distinct', 'protocols', 'fileonly', 'titleonly', 'timeonly', 'keywords'.
-	
-	-----Keybind Slots Settings-----
-	keybinds_quicksave_fileonly = true, --When quick saving to a keybind slot, it will not save position
-	keybinds_empty_auto_create = false, --If the keybind slot is empty, this enables quick logging and adding to slot, Otherwise keybinds are assigned from the list or via quicksave.
-	keybinds_empty_fileonly = true, --When auto creating keybind slot, it will not save position.
-	keybinds_auto_resume = true, --When loading a keybind slot, it will auto resume to the saved time.
+	]], --Raccourci utilisé lorsque la liste est ouverte pour sauter au filtre indiqué (il permet aussi de fermer la liste en appuyant deux fois sur le raccourci d'un filtre). Filtres disponibles : 'all', 'keybinds', 'recents', 'distinct', 'protocols', 'fileonly', 'titleonly', 'timeonly', 'keywords'.
+
+	-----Paramètres des emplacements de raccourci-----
+	keybinds_quicksave_fileonly = true, --Lors d'un enregistrement rapide dans un emplacement de raccourci, la position n'est pas enregistrée
+	keybinds_empty_auto_create = false, --Si l'emplacement de raccourci est vide, active l'enregistrement rapide et l'ajout à l'emplacement. Sinon, les raccourcis sont attribués depuis la liste ou via l'enregistrement rapide.
+	keybinds_empty_fileonly = true, --Lors de la création automatique d'un emplacement de raccourci, la position n'est pas enregistrée.
+	keybinds_auto_resume = true, --Lors du chargement d'un emplacement de raccourci, la lecture reprend automatiquement à la position enregistrée.
 	keybinds_add_load_keybind=[[
 	["alt+1", "alt+2", "alt+3", "alt+4", "alt+5", "alt+6", "alt+7", "alt+8", "alt+9"]
-	]], --Keybind that will be used to bind list item to a key, as well as to load it. e.g.: Press alt+1 on list cursor position to add it, press alt+1 while list is hidden to load item keybinded into alt+1. (A new slot is automatically created for each keybind. e.g: .."alt+9, alt+0". Where alt+0 creates a new 10th slot.)
+	]], --Raccourci utilisé pour associer un élément de la liste à une touche, ainsi que pour le charger. Exemple : appuyer sur alt+1 à la position du curseur dans la liste pour l'ajouter, puis sur alt+1 quand la liste est masquée pour charger l'élément associé à alt+1. (Un nouvel emplacement est créé automatiquement pour chaque raccourci. Par exemple .."alt+9, alt+0", où alt+0 crée un 10e emplacement.)
 	keybinds_quicksave_keybind=[[
 	["alt+!", "alt+@", "alt+#", "alt+$", "alt+%", "alt+^", "alt+&", "alt+*", "alt+("]
-	]], --To save keybind to a slot without opening the list, to load these keybinds it uses keybinds_add_load_keybind
+	]], --Pour enregistrer un raccourci dans un emplacement sans ouvrir la liste ; le chargement de ces raccourcis utilise keybinds_add_load_keybind
 	keybinds_remove_keybind=[[
 	["alt+-"]
-	]], --Keybind that is used when list is open to remove the keybind slot based on cursor position
+	]], --Raccourci utilisé lorsque la liste est ouverte pour supprimer l'emplacement de raccourci à la position du curseur
 	keybinds_remove_highlighted_keybind=[[
 	["alt+_"]
-	]], --Keybind that is used when list is open to remove the keybind slot based on highlighted items
+	]], --Raccourci utilisé lorsque la liste est ouverte pour supprimer l'emplacement de raccourci des éléments sélectionnés
 
-	-----Group Settings-----
+	-----Paramètres des groupes-----
 	groups_list_and_keybind =[[
 	[ ["TV Shows", "ctrl+1", "ctrl+!"], ["Movies", "ctrl+2", "ctrl+@"], ["Anime", "ctrl+3", "ctrl+#"], ["Anime Movies", "ctrl+4", "ctrl+$"], ["Cartoon", "ctrl+5"], ["Animated Movies"] ]
-	]], --Define the groups that can be assigned to a bookmarked item, you can also optionally assign the keybind, and the highlight keybind that puts the bookmarked item into the relevant group when the list is open. Alternatively you can use list_group_add_cycle_keybind to assign item to a group
+	]], --Définit les groupes attribuables à un élément mis en signet. Vous pouvez aussi indiquer, en option, le raccourci et le raccourci de sélection qui placent l'élément mis en signet dans le groupe correspondant lorsque la liste est ouverte. Vous pouvez également utiliser list_group_add_cycle_keybind pour affecter un élément à un groupe
 	list_groups_remove_keybind=[[
 	["ctrl+-"]
-	]], --Keybind that is used when list is open to remove the group based on cursor position
+	]], --Raccourci utilisé lorsque la liste est ouverte pour retirer le groupe à la position du curseur
 	list_groups_remove_highlighted_keybind=[[
 	["ctrl+_"]
-	]], --Keybind that is used when list is open to remove the group based on highlighted items
+	]], --Raccourci utilisé lorsque la liste est ouverte pour retirer le groupe des éléments sélectionnés
 	list_group_add_cycle_keybind=[[
 	["ctrl+g"]
-	]], --Keybind to add an item to the group, this cycles through all the different available groups when list is open
+	]], --Raccourci pour ajouter un élément à un groupe ; il fait défiler tous les groupes disponibles lorsque la liste est ouverte
 	list_group_add_cycle_highlighted_keybind=[[
 	["ctrl+G"]
-	]], --Keybind to add highlighted items to the group, this cycles through all the different available groups when list is open
+	]], --Raccourci pour ajouter les éléments sélectionnés à un groupe ; il fait défiler tous les groupes disponibles lorsque la liste est ouverte
 
-	-----Logging Settings-----
-	log_path = '/:dir%mpvconf%', --Change to '/:dir%script%' for placing it in the same directory of script, OR change to '/:dir%mpvconf%' for mpv portable_config directory. OR write any variable using '/:var' then the variable '/:var%APPDATA%' you can use path also, such as: '/:var%APPDATA%\\mpv' OR '/:var%HOME%/mpv' OR specify the absolute path , e.g.: 'C:\\Users\\Eisa01\\Desktop\\'
-	log_file = 'mpvBookmark.log', --name+extension of the file that will be used to store the log data
-	file_title_logging = 'all', --Change between 'all', 'protocols', 'local', 'none'. This option will store the media title in log file, it is useful for websites / protocols because title cannot be parsed from links alone
+	-----Paramètres du journal-----
+	log_path = '/:dir%mpvconf%', --Mettre '/:dir%script%' pour le placer dans le même répertoire que le script, OU '/:dir%mpvconf%' pour le répertoire portable_config de mpv. OU indiquer une variable avec '/:var' suivie du nom de la variable, par exemple '/:var%APPDATA%' ; un chemin peut aussi être ajouté, comme '/:var%APPDATA%\\mpv' OU '/:var%HOME%/mpv'. OU indiquer le chemin absolu, par exemple : 'C:\\Users\\Eisa01\\Desktop\\'
+	log_file = 'mpvBookmark.log', --Nom + extension du fichier utilisé pour stocker les données du journal
+	file_title_logging = 'all', --Choisir entre 'all', 'protocols', 'local', 'none'. Cette option enregistre le titre du média dans le fichier journal ; c'est utile pour les sites web / protocoles car le titre ne peut pas être déduit du seul lien
 	logging_protocols=[[
 	["://", "magnet:"]
 	]], --add above (after a comma) any protocol you want its title to be stored in the log file. This is valid only for (file_title_logging = 'protocols' or file_title_logging = 'all')

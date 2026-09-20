@@ -78,7 +78,7 @@ defaults = {
 	flash_duration = 1000,
 	proximity_in = 40,
 	proximity_out = 120,
-	total_time = false, -- deprecated by below
+	total_time = false, -- rendu obsolète par l'option ci-dessous
 	destination_time = 'playtime-remaining',
 	time_precision = 0,
 	font_bold = false,
@@ -118,7 +118,7 @@ function handle_options(changed_options)
 	request_render()
 end
 opt.read_options(options, 'uosc', handle_options)
--- Normalize values
+-- Normalisation des valeurs
 options.proximity_out = math.max(options.proximity_out, options.proximity_in + 1)
 if options.chapter_ranges:sub(1, 4) == '^op|' then options.chapter_ranges = defaults.chapter_ranges end
 if options.total_time and options.destination_time == 'playtime-remaining' then
@@ -131,7 +131,7 @@ if not itable_index_of({'left', 'right'}, options.top_bar_controls) then
 	options.top_bar_controls = options.top_bar_controls == 'yes' and 'right' or nil
 end
 
---[[ INTERNATIONALIZATION ]]
+--[[ INTERNATIONALISATION ]]
 local intl = require('lib/intl')
 t = intl.t
 require('lib/char_conv')
@@ -177,8 +177,8 @@ config = {
 	version = uosc_version,
 	open_subtitles_api_key = 'b0rd16N0bp7DETMpO4pYZwIqmQkZbYQr',
 	open_subtitles_agent = 'uosc v' .. uosc_version,
-	-- sets max rendering frequency in case the
-	-- native rendering frequency could not be detected
+	-- définit la fréquence de rendu maximale au cas où la
+	-- fréquence de rendu native n'aurait pas pu être détectée
 	render_delay = 1 / 60,
 	font = options.font ~= '' and options.font or mp.get_property('options/osd-font'),
 	osd_margin_x = mp.get_property('osd-margin-x'),
@@ -196,12 +196,12 @@ config = {
 			.. ',' .. options.audio_types
 			.. ',' .. options.image_types
 			.. ',' .. options.playlist_types),
-		load = {}, -- populated by update_load_types() below
+		load = {}, -- renseigné par update_load_types() plus bas
 	},
 	stream_quality_options = comma_split(options.stream_quality_options),
 	top_bar_flash_on = comma_split(options.top_bar_flash_on),
 	chapter_ranges = (function()
-		---@type table<string, string[]> Alternative patterns.
+		---@type table<string, string[]> Motifs alternatifs.
 		local alt_patterns = {}
 		if options.chapter_range_patterns and options.chapter_range_patterns ~= '' then
 			for _, definition in ipairs(split(options.chapter_range_patterns, ';+ *')) do
@@ -256,15 +256,15 @@ function update_load_types()
 	config.types.load = extensions
 end
 
--- Updates config with values dependent on options
+-- Met à jour la config avec les valeurs qui dépendent des options
 function update_config()
-	-- Required environment config
+	-- Configuration d'environnement requise
 	if options.autoload then
 		mp.commandv('set', 'keep-open', 'yes')
 		mp.commandv('set', 'keep-open-pause', 'no')
 	end
 
-	-- Adds `{element}_persistency` config properties with forced visibility states (e.g.: `{paused = true}`)
+	-- Ajoute les propriétés de config `{element}_persistency` avec des états de visibilité forcés (ex. : `{paused = true}`)
 	for _, name in ipairs({'timeline', 'controls', 'volume', 'top_bar', 'speed'}) do
 		local option_name = name .. '_persistency'
 		local value, flags = options[option_name], {}
@@ -274,35 +274,35 @@ function update_config()
 		config[option_name] = flags
 	end
 
-	-- Opacity
+	-- Opacité
 	config.opacity = table_assign({}, config_defaults.opacity, serialize_key_value_list(options.opacity,
 		function(value, key)
 			return clamp(0, tonumber(value) or config.opacity[key], 1)
 		end
 	))
 
-	-- Color
+	-- Couleur
 	config.color = table_assign({}, config_defaults.color, serialize_key_value_list(options.color, function(value)
 		return serialize_rgba(value).color
 	end))
 
-	-- Global color shorthands
+	-- Raccourcis globaux de couleur
 	fg, bg = config.color.foreground, config.color.background
 	fgt, bgt = config.color.foreground_text, config.color.background_text
 
-	-- Timeline step
+	-- Pas de la barre de progression
 	do
 		local is_exact = options.timeline_step:sub(-1) == '!'
 		config.timeline_step = tonumber(is_exact and options.timeline_step:sub(1, -2) or options.timeline_step)
 		config.timeline_step_flag = is_exact and 'exact' or ''
 	end
 
-	-- Other
+	-- Divers
 	update_load_types()
 end
 update_config()
 
--- Default menu items
+-- Entrées de menu par défaut
 function create_default_menu_items()
 	return {
 		{title = t('Subtitles'), value = 'script-binding uosc/subtitles'},
@@ -355,7 +355,7 @@ function create_default_menu_items()
 	}
 end
 
---[[ STATE ]]
+--[[ ÉTAT ]]
 
 display = {ax = 0, ay = 0, bx = 1280, by = 720, width = 1280, height = 720, initialized = false}
 cursor = require('lib/cursor')
@@ -372,15 +372,15 @@ state = {
 		return 'linux'
 	end)(),
 	cwd = mp.get_property('working-directory'),
-	path = nil, -- current file path or URL
-	history = {}, -- history of last played files stored as full paths
-	time = nil, -- current media playback time
+	path = nil, -- chemin ou URL du fichier courant
+	history = {}, -- historique des derniers fichiers lus, stockés en chemins complets
+	time = nil, -- position de lecture actuelle du média
 	speed = 1,
 	---@type number|nil
-	duration = nil, -- current media duration
-	max_seconds = nil, -- max seconds the time in timeline is expected to reach, accounted for speed
-	time_human = nil, -- current playback time in human format
-	destination_time_human = nil, -- depends on options.destination_time
+	duration = nil, -- durée du média courant
+	max_seconds = nil, -- nombre de secondes maximal que le temps de la barre de progression devrait atteindre, vitesse comprise
+	time_human = nil, -- position de lecture actuelle au format lisible
+	destination_time_human = nil, -- dépend de options.destination_time
 	pause = mp.get_property_native('pause'),
 	ime_active = mp.get_property_native('input-ime'),
 	chapters = {},
@@ -396,10 +396,10 @@ state = {
 	volume = mp.get_property_native('volume'),
 	volume_max = mp.get_property_native('volume-max'),
 	mute = nil,
-	type = nil, -- video,image,audio
+	type = nil, -- video,image,audio (vidéo, image, audio)
 	is_idle = false,
 	is_video = false,
-	is_audio = false, -- true if file is audio only (mp3, etc)
+	is_audio = false, -- vrai si le fichier est purement audio (mp3, etc.)
 	is_image = false,
 	is_stream = false,
 	has_image = false,
@@ -432,18 +432,18 @@ state = {
 }
 buttons = require('lib/buttons')
 thumbnail = {width = 0, height = 0, disabled = false}
-external = {} -- Properties set by external scripts
-key_binding_overwrites = {} -- Table of key_binding:mpv_command
+external = {} -- Propriétés définies par des scripts externes
+key_binding_overwrites = {} -- Table de raccourci_clavier:commande_mpv
 Elements = require('elements/Elements')
 Menu = require('elements/Menu')
 
--- State dependent utilities
+-- Utilitaires dépendant de l'état
 require('lib/utils')
 require('lib/text')
 require('lib/ass')
 require('lib/menus')
 
--- Determine path to ziggy
+-- Détermine le chemin vers ziggy
 do
 	local bin = 'ziggy-' .. (state.platform == 'windows' and 'windows.exe' or state.platform)
 	config.ziggy_path = os.getenv('MPV_UOSC_ZIGGY') or
@@ -451,7 +451,7 @@ do
 	utils.join_path(mp.command_native({ 'expand-path', options.ziggy_path }), bin)
 end
 
---[[ STATE UPDATERS ]]
+--[[ MISES À JOUR DE L'ÉTAT ]]
 
 function update_display_dimensions()
 	state.scale = (state.hidpi_scale or 1) * (state.fullormaxed and options.scale_fullscreen or options.scale)
@@ -461,10 +461,10 @@ function update_display_dimensions()
 	display.bx, display.width, display.by, display.height = real_width, real_width, real_height, real_height
 	display.initialized = true
 
-	-- Tell elements about this
+	-- Prévenir les éléments
 	Elements:trigger('display')
 
-	-- Some elements probably changed their rectangles as a reaction to `display`
+	-- Certains éléments ont probablement modifié leurs rectangles en réaction à `display`
 	Elements:update_proximities()
 	request_render()
 end

@@ -1,51 +1,91 @@
-## MPV config ([English branch](https://github.com/dyphire/mpv-config/tree/eng))
+# mpv-config — fork français et personnalisé
 
-### 项目介绍
+Ce dépôt est un fork de [dyphire/mpv-config](https://github.com/dyphire/mpv-config), adapté pour proposer une configuration mpv francophone, cohérente et utilisable principalement sous Linux.
 
-本项目为 windows 下 [mpv](https://github.com/mpv-player/mpv) 播放器的配置文件，应放入`mpv.exe`所在目录的`portable_config`文件夹内，
+Il ne s’agit pas d’un miroir ni d’une traduction figée à l’identique. Le projet source sert de base technique et continue d’alimenter ce fork, mais les mises à jour sont intégrées de manière sélective. Les valeurs par défaut, les raccourcis, les scripts retenus et certains choix d’interface peuvent donc volontairement diverger de l’amont.
 
-或 mpv 配置默认路径`%APPDATA%/mpv/`下，这种方式全局生效。
+## Objectifs
 
-使用`portable_config`时会覆盖全局配置方案。
+- fournir des commentaires, menus, messages OSD et documentations en français ;
+- conserver les scripts, correctifs et améliorations utiles publiés par le projet source ;
+- proposer des réglages par défaut adaptés à Linux plutôt que de conserver tous les choix historiques orientés Windows ;
+- privilégier les sous-titres français, puis anglais ;
+- conserver une configuration directement utilisable, tout en restant facile à personnaliser ;
+- documenter les divergences importantes avec le projet amont.
 
-PS：自行编辑配置文件时，注意编码格式应为 UTF-8，换行符为 Unix，否则 MPV 可能无法识别
+## Philosophie du fork
 
-**mpv 整合包下载**：[Releases](https://github.com/dyphire/mpv-config/releases)
+Les mises à jour de [dyphire/mpv-config](https://github.com/dyphire/mpv-config) ne sont pas recopiées aveuglément. À chaque synchronisation :
 
-### mpv 客户端
+1. les nouveaux scripts, correctifs et options utiles sont examinés ;
+2. les changements incompatibles avec Linux ou avec les choix de ce fork sont adaptés ;
+3. les textes destinés à l’utilisateur sont traduits en français ;
+4. les réglages personnalisés sont conservés lorsqu’ils restent pertinents ;
+5. la configuration est vérifiée avec une version réelle de mpv avant validation.
 
-- 目前 mpv 没有官方发布的客户端，官网上有放一些推荐的第三方编译版：[https://mpv.io/installation](https://mpv.io/installation)
-  - windows 上推荐使用 shinchiro 版： [shinchiro_mpv](https://github.com/shinchiro/mpv-winbuild-cmake/releases) ![releases](https://img.shields.io/github/v/release/shinchiro/mpv-winbuild-cmake)
-  - 每日构建版：[zhongfly_mpv](https://github.com/zhongfly/mpv-winbuild) [![releases](https://img.shields.io/github/v/release/zhongfly/mpv-winbuild)](https://github.com/zhongfly/mpv-winbuild/releases)
-  - 基于个人修改版 [mpv](https://github.com/dyphire/mpv/tree/patch) 构建版：[dyphire_mpv](https://github.com/dyphire/mpv-winbuild) [![releases](https://img.shields.io/github/v/release/dyphire/mpv-winbuild)](https://github.com/dyphire/mpv-winbuild/releases)
-    - [修改版 mpv 相关说明](https://github.com/dyphire/mpv-config/discussions/7)
-- 目前比较成熟的 mpv/libmpv 前端推荐： [mpv.net](https://github.com/mpvnet-player/mpv.net) [![mpv.net](https://flat.badgen.net/github/last-commit/mpvnet-player/mpv.net?scale=1.0&cache=1800)](https://github.com/mpvnet-player/mpv.net) [![releases](https://img.shields.io/github/v/release/mpvnet-player/mpv.net)](https://github.com/mpvnet-player/mpv.net/releases)
-  - 个人 mpv.net 配置文件参考：https://github.com/dyphire/mpv-config/tree/mpvnet
-- 浏览器调用 mpv 播放的方法推荐
-  - [mpv-handler](https://github.com/akiirui/mpv-handler) 配合脚本 [play-with-mpv](https://greasyfork.org/zh-CN/scripts/416271-play-with-mpv)
-  - [external-player](https://github.com/LuckyPuppy514/external-player)
-- 单实例模式：[umpv](https://github.com/zhongfly/umpv-go)
+Cette approche signifie que deux versions contemporaines des dépôts amont et français peuvent avoir des comportements par défaut différents. C’est intentionnel.
 
-### 脚本着色器说明
+## Principales différences actuelles
 
-本项目使用的 mpv 脚本及功能介绍详见 wiki 内容： [脚本说明-wiki](https://github.com/dyphire/mpv-config/wiki/脚本说明)
+- API graphique Vulkan ;
+- sortie audio ALSA ;
+- socket IPC Linux dans `/tmp/mpvsocket` ;
+- taille initiale de fenêtre limitée à 70 % de l’écran ;
+- chargement automatique des pistes audio et des sous-titres externes ;
+- recherche des pistes audio dans `audio` et `audios` ;
+- recherche des sous-titres dans `sub`, `subs` et `subtitles` ;
+- priorité aux sous-titres français, puis anglais ;
+- rendu des polices par Fontconfig et police `Noto Sans` ;
+- menus uosc, messages et principaux commentaires traduits en français ;
+- raccourcis clavier et souris adaptés à l’usage de ce fork.
 
-本项目涉及的着色器见 mpv.conf 中相关内容
+La configuration détaillée et les explications de chaque option se trouvent dans `mpv.conf`, `input.conf`, `inputevent_key.conf` et le dossier `script-opts`.
 
-### 预览
+## Installation
 
- ![image-20231103224421000](https://cdn.jsdelivr.net/gh/dyphire/PicGo/img/2023/11/03/image-20231103224421000.png)
+### Linux
 
-![image-20231103224540075](https://cdn.jsdelivr.net/gh/dyphire/PicGo/img/2023/11/03/image-20231103224540075.png)
+Sauvegardez d’abord votre configuration actuelle, puis placez le contenu du dépôt dans :
 
-![image-20231103224557019](https://cdn.jsdelivr.net/gh/dyphire/PicGo/img/2023/11/03/image-20231103224557019.png)
+```text
+~/.config/mpv/
+```
 
-| 拼音搜索（支持首字母）                                                                                    | 字幕下载                                                                                           |
-| ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| ![image](https://cdn.jsdelivr.net/gh/dyphire/PicGo/img/2023/11/03/image-20231103224614449.png) | ![image](https://cdn.jsdelivr.net/gh/dyphire/PicGo/img/2023/11/03/image-20231103224721066.png) |
+Exemple de sauvegarde :
 
-### 参考
+```sh
+cp -a ~/.config/mpv ~/.config/mpv.backup
+```
 
-* [hooke007 配置手册](https://hooke007.github.io/mpv-lazy/mpv.html)
-* [mpv 原版官方的开发版手册（英文）](https://mpv.io/manual/master/)
-* [mpv 官方文档的汉化版-hooke007](https://github.com/hooke007/mpv_doc-CN)
+### Windows
+
+Le fork reste en partie compatible avec Windows, mais ses valeurs par défaut ciblent Linux. Pour l’utiliser sous Windows, il faut au minimum revoir les options graphiques, audio, IPC et les chemins. Le projet source reste préférable pour une configuration Windows prête à l’emploi.
+
+## État du travail
+
+La francisation couvre la configuration principale, les menus, de nombreux scripts et leurs options. Certains éléments restent volontairement dans leur langue d’origine lorsqu’ils constituent :
+
+- des fichiers de traduction pour d’autres langues ;
+- des expressions régulières servant à détecter des titres ou des chapitres ;
+- des données de conversion linguistique ;
+- des noms propres, des identifiants d’API ou des chaînes nécessaires à un service tiers ;
+- du contenu juridique provenant d’une licence.
+
+## Changements prévus
+
+- poursuivre la relecture des traductions françaises ;
+- intégrer régulièrement les changements pertinents du dépôt source ;
+- consigner plus clairement les divergences fonctionnelles avec l’amont ;
+- vérifier la compatibilité avec les nouvelles versions de mpv, uosc et des scripts inclus ;
+- simplifier progressivement les réglages encore trop liés à Windows ;
+- préparer, lorsque l’ensemble sera suffisamment stable, des versions faciles à installer et à mettre à jour.
+
+## Projet source et références
+
+- projet source : [dyphire/mpv-config](https://github.com/dyphire/mpv-config) ;
+- lecteur mpv : [mpv-player/mpv](https://github.com/mpv-player/mpv) ;
+- installation de mpv : [mpv.io/installation](https://mpv.io/installation) ;
+- manuel officiel : [mpv.io/manual](https://mpv.io/manual/master/) ;
+- interface uosc : [tomasklaen/uosc](https://github.com/tomasklaen/uosc).
+
+Merci aux auteurs et contributeurs du projet source ainsi qu’aux développeurs des scripts et nuanceurs inclus dans cette configuration.

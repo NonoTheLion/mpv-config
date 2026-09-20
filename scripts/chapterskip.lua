@@ -5,55 +5,55 @@
   * License: MIT
   * link: https://github.com/dyphire/mpv-scripts
   *
-  * This script skips to the next silence in the file. The
-  * intended use for this is to skip until the end of an
-  * opening sequence, at which point there's often a short
-  * period of silence.
+  * Ce script saute jusqu'au prochain silence du fichier. Il sert
+  * principalement à passer un générique d'ouverture jusqu'à sa
+  * fin, moment où l'on trouve souvent une courte
+  * période de silence.
   *
-  * You can change this by adding
-  * the following line to your input.conf:
-  *     KEY script-binding skip-to-silence
+  * Vous pouvez modifier ce comportement en ajoutant
+  * la ligne suivante à votre input.conf :
+  *     TOUCHE script-binding skip-to-silence
   *
-  * In order to tweak the script parameters, you can place the
-  * text below, between the template markers, in a new file at
-  * script-opts/chapterskip.conf in mpv's user folder. The
-  * parameters will be automatically loaded on start.
+  * Pour ajuster les paramètres du script, placez le texte
+  * ci-dessous, situé entre les marqueurs de modèle, dans un
+  * nouveau fichier script-opts/chapterskip.conf du dossier
+  * utilisateur de mpv. Les paramètres seront chargés au démarrage.
   *
-  * Dev note about the used filters:
-  * - `silencedetect` is an audio filter that listens for silence and
-  * emits text output with details whenever silence is detected.
-  * Filter documentation: https://ffmpeg.org/ffmpeg-filters.html
-****************** TEMPLATE FOR chapterskip.conf ******************
-#--(#number). Maximum amount of noise to trigger, in terms of dB. Lower is more sensitive.
+  * Note de développement sur les filtres utilisés :
+  * - `silencedetect` est un filtre audio qui guette les silences et
+  * émet une sortie texte détaillée dès qu'un silence est détecté.
+  * Documentation du filtre : https://ffmpeg.org/ffmpeg-filters.html
+****************** MODÈLE POUR chapterskip.conf ******************
+#--(#nombre). Niveau de bruit maximal déclenchant la détection, en dB. Plus bas = plus sensible.
 silence_audio_level=-40
 
-#--(#number). Duration of the silence that will be detected to trigger skipping.
+#--(#nombre). Durée du silence à détecter pour déclencher le saut.
 silence_duration=0.7
 
-#--(0/#number). The first detcted silence_duration will be ignored for the defined seconds in this option, and it will continue skipping until the next silence_duration.
-# (0 for disabled, or specify seconds).
+#--(0/#nombre). Le premier silence_duration détecté est ignoré pendant le nombre de secondes défini par cette option, et le saut se poursuit jusqu'au silence_duration suivant.
+# (0 pour désactiver, ou indiquer un nombre de secondes).
 ignore_silence_duration=1
 
-#--(0/#number). Minimum amount of seconds accepted to skip until the configured silence_duration.
-# (0 for disabled, or specify seconds)
+#--(0/#nombre). Nombre minimal de secondes accepté pour un saut jusqu'au silence_duration configuré.
+# (0 pour désactiver, ou indiquer un nombre de secondes)
 min_skip_duration=0
 
-#--(0/#number). Maximum amount of seconds accepted to skip until the configured silence_duration.
-# (0 for disabled, or specify seconds)
+#--(0/#nombre). Nombre maximal de secondes accepté pour un saut jusqu'au silence_duration configuré.
+# (0 pour désactiver, ou indiquer un nombre de secondes)
 max_skip_duration=120
 
-#--(yes/no). Default is muted, however if audio was enabled due to custom mpv settings, the fast-forwarded audio can sound jarring.
+#--(yes/no). Le son est coupé par défaut ; si l'audio reste actif à cause de réglages mpv personnalisés, l'avance rapide peut être désagréable à l'oreille.
 force_mute_on_skip=no
 
-#--(yes/no). Enable position-based inference for chapters (opening/ending detection for videos with chapters)
+#--(yes/no). Active la déduction par position pour les chapitres (détection du générique de début/fin pour les vidéos avec chapitres)
 enable_position_inference=yes
 
-#--(yes/no). Enable position-based inference for history entries in non-chapter files
-# When disabled, history entries will show generic "Skip Segment" instead of "Skip Opening/Ending"
-# Useful to prevent false positives in non-episodic content
+#--(yes/no). Active la déduction par position pour les entrées d'historique des fichiers sans chapitres
+# Si désactivé, les entrées d'historique affichent le générique « Passer le segment » au lieu de « Passer le générique de début/fin »
+# Utile pour éviter les faux positifs dans les contenus non épisodiques
 enable_history_position_inference=yes
 
-#--(#number). Time window (in seconds) from the start to consider as intro/opening area
+#--(#nombre). Fenêtre de temps (en secondes) depuis le début à considérer comme zone d'intro/générique de début
 intro_time_window=200
 
 #--(#number). Time window (in seconds) from the end to consider as outro/ending area

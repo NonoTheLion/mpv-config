@@ -1,5 +1,5 @@
-**说明**
+**Description**
 
-此文件夹下存放不再使用的配置文件，但因其仍可满足部分场景需求，故存档保留。
+Ce dossier contient les fichiers de configuration qui ne sont plus utilisés ; ils sont conservés ici en archive car ils peuvent encore répondre à certains besoins.
 
-文件夹结构保持原本样式，可直接放入主配置目录后通过调整后使用。
+La structure des dossiers est conservée telle quelle : ces fichiers peuvent être placés directement dans le répertoire de configuration principal, puis adaptés avant utilisation.

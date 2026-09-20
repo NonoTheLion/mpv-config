@@ -1,6 +1,6 @@
 ---@alias ElementProps {enabled?: boolean; render_order?: number; ax?: number; ay?: number; bx?: number; by?: number; ignores_curtain?: boolean; anchor_id?: string;}
 
--- Base class all elements inherit from.
+-- Classe de base dont héritent tous les éléments.
 ---@class Element : Class
 local Element = class()
 
@@ -9,30 +9,30 @@ local Element = class()
 function Element:init(id, props)
 	self.id = id
 	self.render_order = 1
-	-- `false` means element won't be rendered, or receive events
+	-- `false` signifie que l'élément ne sera pas rendu et ne recevra pas d'événements
 	self.enabled = true
-	-- Element coordinates
+	-- Coordonnées de l'élément
 	self.ax, self.ay, self.bx, self.by = 0, 0, 0, 0
-	-- Relative proximity from `0` - mouse outside `proximity_max` range, to `1` - mouse within `proximity_min` range.
+	-- Proximité relative, de `0` - souris hors de la portée `proximity_max` - à `1` - souris dans la portée `proximity_min`.
 	self.proximity = 0
-	-- Raw proximity in pixels.
+	-- Proximité brute en pixels.
 	self.proximity_raw = math.huge
-	---@type number `0-1` factor to force min visibility. Used for toggling element's permanent visibility.
+	---@type number Facteur `0-1` imposant une visibilité minimale. Sert à basculer la visibilité permanente de l'élément.
 	self.min_visibility = 0
-	---@type number `0-1` factor to force a visibility value. Used for flashing, fading out, and other animations
+	---@type number Facteur `0-1` imposant une valeur de visibilité. Sert au clignotement, au fondu et aux autres animations
 	self.forced_visibility = nil
-	---@type boolean Show this element even when curtain is visible.
+	---@type boolean Afficher cet élément même lorsque le rideau est visible.
 	self.ignores_curtain = false
-	---@type nil|string ID of an element from which this one should inherit visibility.
+	---@type nil|string Identifiant de l'élément dont celui-ci doit hériter la visibilité.
 	self.anchor_id = nil
-	---@type fun()[] Disposer functions called when element is destroyed.
+	---@type fun()[] Fonctions de libération appelées lors de la destruction de l'élément.
 	self._disposers = {}
-	---@type table<string,table<string, boolean>> Namespaced active key bindings. Default namespace is `_`.
+	---@type table<string,table<string, boolean>> Raccourcis clavier actifs, par espace de noms. L'espace de noms par défaut est `_`.
 	self._key_bindings = {}
 
 	if props then table_assign(self, props) end
 
-	-- Flash timer
+	-- Minuteur de clignotement
 	self._flash_out_timer = mp.add_timeout(options.flash_duration / 1000, function()
 		local function getTo() return self.proximity end
 		local function onTweenEnd() self.forced_visibility = nil end
@@ -54,7 +54,7 @@ function Element:destroy()
 	Elements:remove(self)
 end
 
--- Calls all disposers registered for this element (usually mpv events/prop observers).
+-- Appelle toutes les fonctions de libération enregistrées pour cet élément (généralement des événements ou observateurs de propriétés mpv).
 function Element:dispose()
 	for _, disposer in ipairs(self._disposers) do disposer() end
 end
@@ -97,37 +97,37 @@ function Element:is_persistent()
 	)
 end
 
--- Decide elements visibility based on proximity and various other factors
+-- Détermine la visibilité des éléments selon la proximité et divers autres facteurs
 function Element:get_visibility()
-	-- Hide when curtain is visible, unless this elements ignores it
+	-- Masquer quand le rideau est visible, sauf si cet élément l'ignore
 	local min_order = (Elements.curtain.opacity > 0 and not self.ignores_curtain) and Elements.curtain.render_order or 0
 	if self.render_order < min_order then return 0 end
 
-	-- Persistency
+	-- Persistance
 	if self:is_persistent() then return 1 end
 
-	-- Forced visibility
+	-- Visibilité forcée
 	if self.forced_visibility then return math.max(self.forced_visibility, self.min_visibility) end
 
-	-- Anchor inheritance
-	-- If anchor returns -1, it means all attached elements should force hide.
+	-- Héritage de l'ancre
+	-- Si l'ancre renvoie -1, cela signifie que tous les éléments rattachés doivent être masqués d'office.
 	local anchor = self.anchor_id and Elements[self.anchor_id]
 	local anchor_visibility = anchor and anchor:get_visibility() or 0
 
 	return anchor_visibility == -1 and 0 or math.max(self.proximity, anchor_visibility, self.min_visibility)
 end
 
--- Call method if it exists
+-- Appelle la méthode si elle existe
 function Element:maybe(name, ...)
 	if self[name] then return self[name](self, ...) end
 end
 
--- Attach a tweening animation to this element
+-- Attache une animation d'interpolation à cet élément
 ---@param from number
 ---@param to number|fun():number
 ---@param setter fun(value: number)
----@param duration_or_callback? number|fun() Duration in milliseconds or a callback function.
----@param callback? fun() Called either on animation end, or when animation is killed.
+---@param duration_or_callback? number|fun() Durée en millisecondes ou fonction de rappel.
+---@param callback? fun() Appelée à la fin de l'animation ou lorsque celle-ci est interrompue.
 function Element:tween(from, to, setter, duration_or_callback, callback)
 	self:tween_stop()
 	self._kill_tween = self.enabled and tween(

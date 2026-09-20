@@ -51,8 +51,8 @@ function CycleButton:init(id, props)
 	end
 
 	local function handle_change(name, value)
-		-- Removes unnecessary floating point digits from values like `2.00000`.
-		-- This happens when observing properties like `speed`.
+		-- Supprime les décimales superflues de valeurs comme `2.00000`.
+		-- Cela se produit lorsqu'on observe des propriétés telles que `speed`.
 		if type(value) == 'string' and string.match(value, '^[%+%-]?%d+%.%d+$') then
 			value = tonumber(value)
 		end
@@ -66,7 +66,7 @@ function CycleButton:init(id, props)
 	end
 
 	local prop_parts = split(self.prop, '@')
-	if #prop_parts == 2 then -- External prop with a script owner
+	if #prop_parts == 2 then -- Propriété externe appartenant à un script
 		self.prop, self.owner = prop_parts[1], prop_parts[2]
 		if self.owner == 'uosc' then
 			self['on_options'] = function() handle_change(self.prop, options[self.prop]) end
@@ -75,7 +75,7 @@ function CycleButton:init(id, props)
 			self['on_external_prop_' .. self.prop] = function(_, value) handle_change(self.prop, value) end
 			handle_change(self.prop, external[self.prop])
 		end
-	elseif is_state_prop then -- uosc's state props
+	elseif is_state_prop then -- Propriétés d'état propres à uosc
 		self['on_prop_' .. self.prop] = function(self, value) handle_change(self.prop, value) end
 		handle_change(self.prop, state[self.prop])
 	else

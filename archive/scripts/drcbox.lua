@@ -19,7 +19,7 @@ Default config:
 -- ------ config -------
 
 local options = {
-    language = 'eng', -- eng=English, chs=Chinese
+    language = 'eng', -- eng=anglais, chs=français
     start_keys_enabled = false, -- if true then choose the up/down keys wisely
     key_toggle_bindings = "ALT+n", -- enter/exit drcbox keys mode
     key_toggle_drcbox = "ALT+N", -- toggle dynaudnorm without changing its values
@@ -45,9 +45,9 @@ local language = {
         msg3 = 'Reset: ',
     },
     ['chs'] = {
-        msg1 = '开/关 dynaudnorm音频处理: ',
-        msg2 = '开/关 内置键位绑定: ',
-        msg3 = '重置  dynaudnorm音频处理: ',
+        msg1 = 'Traitement audio dynaudnorm : ',
+        msg2 = 'Raccourcis intégrés : ',
+        msg3 = 'Réinitialiser dynaudnorm : ',
     }
 }
 

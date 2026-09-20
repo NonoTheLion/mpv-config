@@ -64,12 +64,12 @@ local function get_bilibili_pagelist_args(bvid, aid)
 end
 
 local function resolve_bilibili_cid(path, callback)
-    -- 扩展支持：普通视频（BV/av）、番剧（ep）、课程（cheese）
+    -- Prend en charge les vidéos ordinaires (BV/av), séries (ep) et cours (cheese)
     local api_bangumi_season = "https://api.bilibili.com/pgc/view/web/season"
     local api_cheese_season = "https://api.bilibili.com/pugv/view/web/season"
 
     local q = path
-    -- 解析普通投稿视频
+    -- Analyse une vidéo ordinaire
     local bvid, aid, p = get_bilibili_id_and_page(q)
     if bvid or aid then
         local args = get_bilibili_pagelist_args(bvid, aid)
@@ -93,7 +93,7 @@ local function resolve_bilibili_cid(path, callback)
         return
     end
 
-    -- 番剧、番外等（含 ep）
+    -- Séries, épisodes spéciaux, etc. (avec ep)
     if q:find("bangumi/") and q:find("ep") then
         local epid = q:match("ep(%d+)") or q:match("ep(%d+)$")
         if not epid then
@@ -114,7 +114,7 @@ local function resolve_bilibili_cid(path, callback)
                 callback(nil)
                 return
             end
-            -- 查找正片
+            -- Recherche les épisodes principaux
             local episodes = data.result.episodes or {}
             for _, ep in ipairs(episodes) do
                 if tostring(ep.id) == tostring(epid) then
@@ -122,7 +122,7 @@ local function resolve_bilibili_cid(path, callback)
                     return
                 end
             end
-            -- 查找 section（花絮等）
+            -- Recherche les sections (bonus, etc.)
             if type(data.result.section) == "table" then
                 for _, sec in ipairs(data.result.section) do
                     if sec.episodes then
@@ -140,7 +140,7 @@ local function resolve_bilibili_cid(path, callback)
         return
     end
 
-    -- cheese 课程
+    -- Cours cheese
     if q:find("cheese/") and q:find("ep") then
         local epid = q:match("ep(%d+)") or q:match("ep(%d+)$")
         if not epid then
@@ -173,7 +173,7 @@ local function resolve_bilibili_cid(path, callback)
         return
     end
 
-    -- 其它情况返回 nil
+    -- Renvoie nil dans les autres cas
     callback(nil)
 end
 
@@ -198,7 +198,7 @@ local function download_bilibili_danmaku(path, cid, from_menu, callback)
     end)
 end
 
--- 为 bilibli 网站的视频播放加载弹幕
+-- Charge les danmaku des vidéos Bilibili
 function load_danmaku_for_bilibili(path, callback)
     callback = callback or function() end
     local cid, danmaku_id = get_cid()
@@ -233,8 +233,8 @@ function load_danmaku_for_bilibili(path, callback)
             if resolved_cid then
                 download_bilibili_danmaku(path, resolved_cid, true, callback)
             else
-                show_message("获取哔哩哔哩视频cid失败", 3)
-                msg.error("获取哔哩哔哩视频cid失败")
+                show_message("Impossible d'obtenir le cid de la vidéo Bilibili", 3)
+                msg.error("Impossible d'obtenir le cid de la vidéo Bilibili")
                 callback(false)
             end
         end)

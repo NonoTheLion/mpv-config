@@ -226,15 +226,15 @@ end
 local inflate = {}
 
 ---@class BitStream
----@field buffer string Character Buffer
----@field position integer Position in the character buffer
----@field bits integer Bits buffer
----@field count integer Number of bits in the buffer
+---@field buffer string Tampon de caractères
+---@field position integer Position dans le tampon de caractères
+---@field bits integer Tampon de bits
+---@field count integer Nombre de bits dans le tampon
 local BitStream = {}
 BitStream.__index = BitStream
 
----Creates a new bitstream object with the specified buffer
----@param buffer string The character buffer to use for the bitstream.
+---Crée un flux de bits à partir du tampon indiqué
+---@param buffer string Tampon de caractères utilisé par le flux.
 ---@return BitStream
 function inflate.new(buffer)
     local EOCD
@@ -252,13 +252,13 @@ function inflate.new(buffer)
     local object = {buffer = buffer, position = 0, bits = 0, count = 0}
     return setmetatable(object, BitStream)
 end
----Update the chunk size to be used in inflation. Defaults to `4096`
----@param size integer The new chunk size, should be a power of 2.
+---Modifie la taille des blocs utilisés pour la décompression. Valeur par défaut : `4096`
+---@param size integer Nouvelle taille de bloc, qui doit être une puissance de 2.
 function inflate.setChunkSize(size)
     CHUNK_SIZE = size
 end
 
----Returns an iterator that spans the list of files in the stream
+---Renvoie un itérateur parcourant les fichiers du flux
 ---@return fun(): name: string?, offset: integer?, size: integer?, packed: boolean?, crc: integer?
 function BitStream:files()
     local buffer = self.buffer
@@ -276,9 +276,9 @@ function BitStream:files()
         return name, offset + 30 + length + int2le(buffer, offset + 28), int4le(buffer, offset + 18), packed, crc
     end
 end
----Inflates the bitstream starting from the specified offset and optionally performs checksum verification
----@param offset integer The position at which to begin inflating.
----@param crc? integer The checksum value to use for verification.
+---Décompresse le flux à partir du décalage indiqué et peut vérifier sa somme de contrôle
+---@param offset integer Position à laquelle commencer la décompression.
+---@param crc? integer Somme de contrôle utilisée pour la vérification.
 ---@return string
 function BitStream:inflate(offset, crc)
     local output, buffer = {}, {}
@@ -300,9 +300,9 @@ function BitStream:inflate(offset, crc)
     end
     return result
 end
----Extracts a specific file from the bitstream
----@param filepath string The file to unzip.
----@param verify? boolean Whether or not to perform checksum verification.
+---Extrait un fichier précis du flux
+---@param filepath string Fichier à décompresser.
+---@param verify? boolean Indique s'il faut vérifier la somme de contrôle.
 ---@return string
 function BitStream:unzip(filepath, verify)
     for name, offset, size, packed, crc in self:files() do
@@ -312,9 +312,9 @@ function BitStream:unzip(filepath, verify)
     end
     error('File "'..filepath..'" not found in ZIP archive.')
 end
---- Extracts unpacked contents from the bitstream at the specified offset and size
---- @param offset integer The starting position from which to extract the contents.
---- @param size integer The size of the contents to extract.
+--- Extrait le contenu décompressé à la position et sur la longueur indiquées
+--- @param offset integer Position de départ de l'extraction.
+--- @param size integer Taille du contenu à extraire.
 function BitStream:extract(offset, size)
     return sub(self.buffer, offset, offset + size - 1)
 end

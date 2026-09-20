@@ -2,10 +2,10 @@
 	SOURCE_: https://github.com/WatanabeChika/mpv-lines-meme-generator
 	Modify_: https://github.com/dyphire/mpv-scripts
 	
-	create long graph of lines with mpv
-	requires ffmpeg.
+	crée une longue image assemblant des répliques avec mpv
+	nécessite ffmpeg.
 
-	Usage: add bindings to input.conf
+	Utilisation : ajoutez des raccourcis dans input.conf
 	-- key script-message crop-screenshot
 	-- key script-message take-screenshot
 	-- key script-message stitch-images
@@ -18,9 +18,9 @@ local msg = require 'mp.msg'
 
 local options = {
 	ffmpeg_path = "ffmpeg",
-	screenshot_dir = "~~/screenshots",   -- your path to save screenshots
-	lossless = false,               -- use lossless screenshots
-	ffmpeg_loglevel = "error",      -- ffmpeg log level
+	screenshot_dir = "~~/screenshots",   -- chemin d'enregistrement des captures d'écran
+	lossless = false,               -- utiliser des captures sans perte
+	ffmpeg_loglevel = "error",      -- niveau de journalisation de ffmpeg
 }
 
 read_options(options, _, function() end)
@@ -31,9 +31,9 @@ local screenshot_count = 0
 local subtitle_top, subtitle_bottom = 0, 0
 local screenshots = {}
 
--- detect path separator, detect path separator, windows uses backslashes
+-- détecte le séparateur de chemin, windows utilise des antislashs
 local is_windows = package.config:sub(1, 1) == "\\"
---create screenshot_dir if it doesn't exist
+--crée screenshot_dir s'il n'existe pas
 if screenshot_dir ~= '' then
 	local meta = utils.file_info(screenshot_dir)
 	if not meta or not meta.is_dir then
@@ -48,8 +48,8 @@ if screenshot_dir ~= '' then
 			args = args
 		})
 		if res.status ~= 0 then
-			msg.error("Failed to create screenshot_dir save directory " .. screenshot_dir ..
-			". Error: " .. (res.error or "unknown"))
+			msg.error("Impossible de créer le dossier d'enregistrement screenshot_dir " .. screenshot_dir ..
+			". Erreur : " .. (res.error or "inconnue"))
 			return
 		end
 	end
@@ -63,7 +63,7 @@ local function file_exist(path)
 	return true
 end
 
--- helper: crop an input image file into output using mpv
+-- utilitaire : recadre une image d'entrée vers un fichier de sortie via mpv
 local function mpv_crop_file(input_path, out_path, crop_arg)
 	local ENCODER_MAP = {
 		[".png"] = "png",
@@ -82,7 +82,7 @@ local function mpv_crop_file(input_path, out_path, crop_arg)
 
 	local res = utils.subprocess({ args = cmd, capture_stdout = true, capture_stderr = true })
 	if res and res.status ~= 0 then
-		msg.error("mpv crop failed: status=" .. tostring(res.status) .. " error=" .. tostring(res.error))
+		msg.error("Échec du recadrage par mpv : status=" .. tostring(res.status) .. " error=" .. tostring(res.error))
 		if res.stdout then msg.error("mpv stdout: " .. tostring(res.stdout)) end
 		if res.stderr then msg.error("mpv stderr: " .. tostring(res.stderr)) end
 	end

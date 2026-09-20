@@ -1,108 +1,108 @@
 # uosc_danmaku
 
-在MPV播放器中加载弹弹play弹幕，基于 uosc UI框架和弹弹play API的mpv弹幕扩展插件
+Charge les danmaku de DanDanPlay dans le lecteur MPV. Il s’agit d’une extension mpv pour les danmaku, basée sur l’interface uosc et l’API de DanDanPlay.
 
 > [!WARNING]
-> Release1.2.0及Release1.2.0之前的发行版，都由于弹弹play接口使用政策改版，部分功能无法使用。如果发现插件功能异常，比如搜索弹幕总是显示无结果，请拉取或下载主分支最新源代码；或下载[最新发行版](https://github.com/Tony15246/uosc_danmaku/releases/latest)
+> Dans la version 1.2.0 et les versions antérieures, certaines fonctions sont indisponibles en raison d’une modification de la politique d’utilisation de l’API DanDanPlay. Si l’extension ne fonctionne pas correctement, par exemple si la recherche de danmaku ne renvoie jamais de résultat, récupérez ou téléchargez le code source le plus récent de la branche principale, ou téléchargez la [dernière version publiée](https://github.com/Tony15246/uosc_danmaku/releases/latest).
 
 > [!NOTE]
-> 插件默认通过项目维护的 API 代理 `https://danmaku-api.152468.xyz` 访问弹弹play开放弹幕网络。普通用户无需注册账号，也无需配置或持有弹弹play的 AppId/AppSecret。代理包含缓存和访问频率限制，请勿用于批量抓取。
+> Par défaut, l’extension accède au réseau public de danmaku de DanDanPlay via le proxy d’API maintenu par le projet, `https://danmaku-api.152468.xyz`. Les utilisateurs ordinaires n’ont pas besoin de créer un compte, ni de configurer ou de posséder un AppId/AppSecret DanDanPlay. Le proxy comporte une mise en cache et une limitation de la fréquence d’accès ; ne l’utilisez pas pour des téléchargements en masse.
 
 > [!NOTE]
-> 已添加对mpv内部 `mp.input`的支持，在uosc不可用时通过键绑定调用此方式渲染菜单
+> La prise en charge de l’interface interne `mp.input` de mpv a été ajoutée. Lorsque uosc n’est pas disponible, les menus peuvent être affichés de cette manière au moyen de raccourcis clavier.
 > 
-> 欲启用此支持mpv最低版本要求：0.39.0
+> Pour activer cette prise en charge, mpv 0.39.0 ou une version ultérieure est requis.
 
-## 项目简介
+## Présentation du projet
 
-插件具体效果见演示视频：
+Consultez la vidéo de démonstration pour voir l’extension en action :
 
 <video width="902" src="https://github.com/user-attachments/assets/86717e75-9176-4f1a-88cd-71fa94da0c0e">
 </video>
 
-在未安装uosc框架时，调用mpv内部的 `mp.input`进行菜单渲染，具体效果见[此pr](https://github.com/Tony15246/uosc_danmaku/pull/24)
+Lorsque l’interface uosc n’est pas installée, les menus sont affichés via l’interface interne `mp.input` de mpv. Consultez [cette PR](https://github.com/Tony15246/uosc_danmaku/pull/24) pour voir le résultat.
 
-### 主要功能
+### Fonctionnalités principales
 
 <details open>
 
-1. 从弹弹play或自定义服务的API获取剧集及弹幕数据，并根据用户选择的集数加载弹幕
+1. Récupère les séries et les danmaku depuis l’API de DanDanPlay ou d’un service personnalisé, puis charge les danmaku de l’épisode sélectionné par l’utilisateur.
 
-2. 通过点击uosc control bar中的弹幕搜索按钮可以显示搜索菜单供用户选择需要的弹幕
+2. Un clic sur le bouton de recherche de danmaku dans la barre de commandes de uosc affiche un menu permettant de choisir les danmaku souhaités.
 
-3. 通过点击加入uosc control bar中的弹幕开关控件可以控制弹幕的开关
+3. Un clic sur l’interrupteur des danmaku ajouté à la barre de commandes de uosc permet d’activer ou de désactiver leur affichage.
 
-4. 通过点击加入uosc control bar中的[从源获取弹幕](#从弹幕源向当前弹幕添加新弹幕内容可选)按钮可以通过受支持的网络源或本地文件添加弹幕
+4. Un clic sur le bouton [Obtenir des danmaku depuis une source](#ajouter-de-nouveaux-danmaku-depuis-une-source-facultatif), ajouté à la barre de commandes de uosc, permet d’ajouter des danmaku depuis une source en ligne prise en charge ou un fichier local.
 
-5. 通过点击加入uosc control bar中的[弹幕样式](#实时修改弹幕样式可选)按钮可以打开uosc弹幕样式菜单供用户在视频播放时实时修改弹幕样式（注意⚠️：未安装uosc框架时该功能不可用）
+5. Un clic sur le bouton [Style des danmaku](#modifier-le-style-des-danmaku-en-temps-réel-facultatif), ajouté à la barre de commandes de uosc, ouvre le menu de style des danmaku de uosc afin de modifier leur apparence en temps réel pendant la lecture (attention ⚠️ : cette fonction est indisponible si l’interface uosc n’est pas installée).
 
-6. 通过点击加入uosc control bar中的[弹幕设置](#弹幕设置总菜单可选)按钮可以打开多级功能复合菜单，包含了插件目前所有的图形化功能。
+6. Un clic sur le bouton [Menu général des réglages des danmaku](#menu-général-des-réglages-des-danmaku-facultatif), ajouté à la barre de commandes de uosc, ouvre un menu composite à plusieurs niveaux qui regroupe toutes les fonctions graphiques actuellement proposées par l’extension.
 
-7. 通过点击加入uosc control bar中的[弹幕源延迟设置](#弹幕源延迟设置可选)按钮可以打开弹幕源延迟控制菜单，可以独立控制每个弹幕源的延迟（注意⚠️：未安装uosc框架时该功能不可用）
+7. Un clic sur le bouton [Réglage du décalage des sources de danmaku](#réglage-du-décalage-des-sources-de-danmaku-facultatif), ajouté à la barre de commandes de uosc, ouvre le menu de réglage du décalage des sources et permet de régler séparément le décalage de chaque source de danmaku (attention ⚠️ : cette fonction est indisponible si l’interface uosc n’est pas installée).
 
-8. 记忆型全自动弹幕填装，在为某个文件夹下的某一集番剧加载过一次弹幕后，加载过的弹幕会自动关联到该集；之后每次重新播放该文件就会自动加载弹幕，同时该文件对应的文件夹下的所有其他集数的文件都会在播放时自动加载弹幕，无需再重复手动输入番剧名进行搜索（注意⚠️：全自动弹幕填装默认关闭，如需开启请阅读[auto_load配置项说明](#auto_load)）
+8. Chargement automatique des danmaku avec mémorisation : après avoir chargé une fois les danmaku d’un épisode situé dans un dossier, ces danmaku sont automatiquement associés à cet épisode. Ils seront ensuite chargés automatiquement chaque fois que le fichier sera relu. Tous les fichiers des autres épisodes présents dans le même dossier chargeront eux aussi automatiquement leurs danmaku lors de la lecture, sans qu’il soit nécessaire de saisir à nouveau le nom de la série pour effectuer une recherche (attention ⚠️ : le chargement entièrement automatique des danmaku est désactivé par défaut ; pour l’activer, consultez la [description de l’option auto_load](#auto_load)).
 
-9. 在没有手动加载过弹幕，没有填装自动弹幕记忆之前，通过文件哈希匹配的方式自动添加弹幕（~仅限本地文件~，现已支持网络视频），对于能够哈希匹配关联的文件不再需要手动搜索关联，实现全自动加载弹幕并添加记忆。该功能随记忆型全自动弹幕填装功能一起开启（哈希匹配自动加载准确率较低，如关联到错误的剧集请手动加载正确的剧集）
+9. Avant tout chargement manuel de danmaku et avant la création d’une association mémorisée pour le chargement automatique, les danmaku sont ajoutés automatiquement par comparaison du hachage du fichier (~fichiers locaux uniquement~, les vidéos en ligne sont désormais prises en charge). Les fichiers pouvant être associés grâce à leur hachage ne nécessitent plus de recherche manuelle : les danmaku sont chargés automatiquement et l’association est mémorisée. Cette fonction est activée en même temps que le chargement automatique avec mémorisation (la précision de l’association automatique par hachage est faible ; si le mauvais épisode est associé, chargez manuellement le bon épisode).
    
-   > 哈希匹配功能需要 mpv 基于 LuaJIT 或 Lua 5.2 构建，不支持 Lua 5.1
+   > La comparaison par hachage exige une version de mpv compilée avec LuaJIT ou Lua 5.2 ; Lua 5.1 n’est pas pris en charge.
 
-10. 自动记忆弹幕开关情况，播放视频时保持上次关闭时的弹幕开关状态
+10. Mémorise automatiquement l’état d’activation des danmaku afin de conserver, à la lecture d’une vidéo, l’état dans lequel ils se trouvaient lors de la dernière fermeture.
 
-11. 自定义默认播放弹幕样式（具体设置方法详见[自定义弹幕样式](#自定义弹幕样式相关配置)）
+11. Permet de personnaliser le style d’affichage par défaut des danmaku (pour la procédure détaillée, consultez [Configuration du style personnalisé des danmaku](#configuration-du-style-personnalisé-des-danmaku)).
 
-12. 在使用如[Play-With-MPV](https://github.com/LuckyPuppy514/Play-With-MPV)或[ff2mpv](https://github.com/woodruffw/ff2mpv)等网络播放手段时，自动加载弹幕（注意⚠️：目前支持自动加载bilibili和巴哈姆特这两个网站的弹幕，具体说明查看[autoload_for_url配置项说明](#autoload_for_url)）
+12. Charge automatiquement les danmaku lors de la lecture de vidéos en ligne avec des outils tels que [Play-With-MPV](https://github.com/LuckyPuppy514/Play-With-MPV) ou [ff2mpv](https://github.com/woodruffw/ff2mpv) (attention ⚠️ : le chargement automatique prend actuellement en charge Bilibili et Bahamut Anime ; pour plus de détails, consultez la [description de l’option autoload_for_url](#autoload_for_url)).
 
-13. 保存当前弹幕到本地（详细功能说明见[save_danmaku配置项说明](#save_danmaku)）
+13. Enregistre localement les danmaku actuels (pour une description détaillée, consultez la [description de l’option save_danmaku](#save_danmaku)).
 
-14. 可以合并一定时间段内同时出现的大量重复弹幕（具体设置方法详见[merge_tolerance配置项说明](#merge_tolerance)）
+14. Peut fusionner un grand nombre de danmaku identiques apparaissant simultanément pendant une période donnée (pour la procédure détaillée, consultez la [description de l’option merge_tolerance](#merge_tolerance)).
 
-15. 弹幕简体字繁体字转换，解决弹幕简繁混杂问题（具体设置方法详见[chConvert配置项说明](#chConvert)）
+15. Convertit les danmaku entre caractères chinois simplifiés et traditionnels afin d’éviter leur mélange (pour la procédure détaillée, consultez la [description de l’option chConvert](#chConvert)).
 
-16. 自定义插件相关提示的显示位置，可以自由调节距离画面左上角的两个维度的距离（具体设置方法详见[message_x配置项说明](#message_x)和[message_y配置项说明](#message_y)）
+16. Permet de personnaliser la position d’affichage des messages de l’extension en réglant librement leur distance horizontale et verticale par rapport au coin supérieur gauche de l’image (pour la procédure détaillée, consultez les descriptions des options [message_x](#message_x) et [message_y](#message_y)).
 
-无需亲自下载整合弹幕文件资源，无需亲自处理文件格式转换，在mpv播放器中一键加载包含了哔哩哔哩、巴哈姆特等弹幕网站弹幕的弹弹play的动画弹幕。
+Plus besoin de télécharger et de regrouper vous-même des fichiers de danmaku, ni d’en convertir le format : dans le lecteur mpv, un seul clic suffit pour charger les danmaku d’anime fournis par DanDanPlay et provenant notamment de Bilibili ou de Bahamut Anime.
 
-插件本身支持Linux和Windows平台。项目依赖于[uosc UI框架](https://github.com/tomasklaen/uosc)。欲使用本插件强烈建议为mpv播放器中安装uosc。uosc的安装步骤可以参考其[官方安装教程](https://github.com/tomasklaen/uosc?tab=readme-ov-file#install)。当然，如果使用[MPV_lazy](https://github.com/hooke007/MPV_lazy)等内置了uosc的懒人包则只需安装本插件即可。
+L’extension prend en charge Linux et Windows. Le projet dépend de l’[interface uosc](https://github.com/tomasklaen/uosc). Il est vivement recommandé d’installer uosc dans le lecteur mpv pour utiliser cette extension. Pour installer uosc, consultez son [guide d’installation officiel](https://github.com/tomasklaen/uosc?tab=readme-ov-file#install). Si vous utilisez un pack prêt à l’emploi intégrant déjà uosc, tel que [MPV_lazy](https://github.com/hooke007/MPV_lazy), il suffit bien sûr d’installer cette extension.
 
 </details>
 
-## 目录
+## Sommaire
 
-- [项目简介](#项目简介)
-  - [主要功能](#主要功能)
-- [安装](#安装)
-  - [下载](#下载)
-- [基本配置](#基本配置)
-  - [uosc控件配置](#uosc控件配置)
-  - [绑定快捷键（可选）](#绑定快捷键可选)
-- [拓展功能（可选）](#拓展功能可选)
-  - [从弹幕源向当前弹幕添加新弹幕内容（从网络url或本地添加弹幕）](#从弹幕源向当前弹幕添加新弹幕内容可选)
-  - [弹幕源延迟设置](#弹幕源延迟设置可选)
-  - [实时修改弹幕样式](#实时修改弹幕样式可选)
-  - [弹幕设置总菜单](#弹幕设置总菜单可选)
-  - [设置弹幕延迟（可选）](#设置弹幕延迟可选)
-  - [保存当前视频弹幕（可选）](#保存当前视频弹幕可选)
-  - [清空当前视频关联的弹幕源（可选）](#清空当前视频关联的弹幕源可选)
-  - [检查脚本更新（可选）](#检查脚本更新可选)
-- [可配置选项（可选）](#可配置选项可选)
-  - [弹幕加载相关](#弹幕加载相关)
-  - [弹幕显示相关](#弹幕显示相关)
-  - [弹幕解析服务相关](#弹幕解析服务相关)
-  - [插件配置相关](#插件配置相关)
-  - [自定义弹幕样式相关配置](#自定义弹幕样式相关配置)
-- [插件自定义属性](#插件自定义属性)
-- [常见问题](#常见问题)
-- [特别感谢](#特别感谢)
-- [相关项目](#相关项目)
+- [Présentation du projet](#présentation-du-projet)
+  - [Fonctionnalités principales](#fonctionnalités-principales)
+- [Installation](#installation)
+  - [Téléchargement](#téléchargement)
+- [Configuration de base](#configuration-de-base)
+  - [Configuration des commandes de uosc](#configuration-des-commandes-de-uosc)
+  - [Associer des raccourcis clavier (facultatif)](#associer-des-raccourcis-clavier-facultatif)
+- [Fonctions avancées (facultatif)](#fonctions-avancées-facultatif)
+  - [Ajouter de nouveaux danmaku depuis une source (en ligne ou locale)](#ajouter-de-nouveaux-danmaku-depuis-une-source-facultatif)
+  - [Réglage du décalage des sources de danmaku](#réglage-du-décalage-des-sources-de-danmaku-facultatif)
+  - [Modifier le style des danmaku en temps réel](#modifier-le-style-des-danmaku-en-temps-réel-facultatif)
+  - [Menu général des réglages des danmaku](#menu-général-des-réglages-des-danmaku-facultatif)
+  - [Régler le décalage des danmaku (facultatif)](#régler-le-décalage-des-danmaku-facultatif)
+  - [Enregistrer les danmaku de la vidéo actuelle (facultatif)](#enregistrer-les-danmaku-de-la-vidéo-actuelle-facultatif)
+  - [Effacer les sources de danmaku associées à la vidéo actuelle (facultatif)](#effacer-les-sources-de-danmaku-associées-à-la-vidéo-actuelle-facultatif)
+  - [Rechercher les mises à jour du script (facultatif)](#rechercher-les-mises-à-jour-du-script-facultatif)
+- [Options configurables (facultatif)](#options-configurables-facultatif)
+  - [Chargement des danmaku](#chargement-des-danmaku)
+  - [Affichage des danmaku](#affichage-des-danmaku)
+  - [Service d’analyse des danmaku](#service-danalyse-des-danmaku)
+  - [Configuration de l’extension](#configuration-de-lextension)
+  - [Configuration du style personnalisé des danmaku](#configuration-du-style-personnalisé-des-danmaku)
+- [Propriétés personnalisées de l’extension](#propriétés-personnalisées-de-lextension)
+- [Questions fréquentes](#questions-fréquentes)
+- [Remerciements particuliers](#remerciements-particuliers)
+- [Projets associés](#projets-associés)
 
-## 安装
+## Installation
 
-### 下载
+### Téléchargement
 
-一般的mpv配置目录结构大致如下
+La structure d’un répertoire de configuration mpv classique ressemble généralement à ceci :
 
 > [!NOTE]
-> Windows 系统上等价全局配置路径`%APPDATA%/mpv/`，也可使用 mpv.exe 所在目录的 portable_config 文件夹（便携配置路径）
+> Sous Windows, le chemin de configuration global équivalent est `%APPDATA%/mpv/`. Vous pouvez également utiliser le dossier portable_config situé dans le répertoire de mpv.exe (configuration portable).
 
 ```
 ~/.config/mpv
@@ -114,15 +114,15 @@
 └── scripts
 ```
 
-想要使用本插件，请将本插件完整地[下载](https://github.com/Tony15246/uosc_danmaku/releases)或者克隆到 `scripts`目录下即可使用，文件结构参阅下方
+Pour utiliser cette extension, [téléchargez-la](https://github.com/Tony15246/uosc_danmaku/releases) entièrement ou clonez-la simplement dans le répertoire `scripts`. Consultez ci-dessous la structure des fichiers.
 
 > [!IMPORTANT]
 > 
-> 1. scripts目录下放置本插件的文件夹名称必须为uosc_danmaku，否则必须参照uosc控件配置部分[修改uosc控件](#修改uosc控件可选)
-> 2. 记得给bin文件夹下的文件赋予可执行权限
+> 1. Dans le répertoire scripts, le dossier contenant cette extension doit être nommé uosc_danmaku. Dans le cas contraire, vous devez [modifier les commandes de uosc](#modifier-les-commandes-de-uosc-facultatif) comme indiqué dans la section consacrée à leur configuration.
+> 2. N’oubliez pas d’accorder les droits d’exécution aux fichiers du dossier bin.
 
 <details>
-<summary>文件结构</summary>
+<summary>Structure des fichiers</summary>
 
 ```
 ~/.config/mpv/scripts
@@ -145,133 +145,133 @@
 
 </details>
 
-## 基本配置
+## Configuration de base
 
-#### uosc控件配置
+#### Configuration des commandes de uosc
 
-这一步非常重要，不添加控件，弹幕搜索按钮和弹幕开关就不会显示在进度条上方的控件条中。若没有控件，则只能通过[绑定快捷键](#绑定快捷键可选)调用弹幕搜索和弹幕开关功能
+Cette étape est essentielle. Si vous n’ajoutez pas ces commandes, le bouton de recherche et l’interrupteur des danmaku ne s’afficheront pas dans la barre de commandes située au-dessus de la barre de progression. Sans ces commandes, la recherche et l’activation des danmaku ne seront accessibles que par des [raccourcis clavier](#associer-des-raccourcis-clavier-facultatif).
 
-想要添加uosc控件，需要修改mpv配置文件夹下的 `script-opts`中的 `uosc.conf`文件。如果已经安装了uosc，但是 `script-opts`文件夹下没有 `uosc.conf`文件，可以去[uosc项目地址](https://github.com/tomasklaen/uosc)下载官方的 `uosc.conf`文件，并按照后面的配置步骤进行配置。
+Pour ajouter des commandes uosc, modifiez le fichier `uosc.conf` du répertoire `script-opts` situé dans le dossier de configuration de mpv. Si uosc est déjà installé, mais que le dossier `script-opts` ne contient aucun fichier `uosc.conf`, téléchargez le fichier `uosc.conf` officiel depuis le [dépôt du projet uosc](https://github.com/tomasklaen/uosc), puis suivez les étapes de configuration ci-dessous.
 
-由于uosc最近才更新了部分接口和控件代码，导致老旧版本的uosc和新版的uosc配置有所不同。如果是下载的最新git版uosc或者一直保持更新的用户按照 `最新版uosc的控件配置步骤` 配置即可。如果不确定自己的uosc版本，或者在使用诸如[MPV_lazy](https://github.com/hooke007/MPV_lazy)等由第三方管理uosc版本的用户，可以按照兼容新版和旧版uosc的 `旧版uosc控件配置步骤` 配置。
+Comme certaines interfaces et le code des commandes de uosc n’ont été mis à jour que récemment, la configuration diffère entre les anciennes et les nouvelles versions. Si vous avez téléchargé la dernière version Git de uosc ou si vous la maintenez à jour, suivez la `procédure de configuration des commandes de la dernière version de uosc`. Si vous ignorez votre version de uosc, ou si elle est gérée par un tiers, par exemple dans [MPV_lazy](https://github.com/hooke007/MPV_lazy), suivez la `procédure de configuration des commandes des anciennes versions de uosc`, compatible avec les versions récentes comme anciennes.
 
 <details>
-<summary>最新版uosc的控件配置步骤</summary>
+<summary>Procédure de configuration des commandes de la dernière version de uosc</summary>
 
-找到 `uosc.conf`文件中的 `controls`配置项，uosc官方默认的配置可能如下：
+Repérez l’option `controls` dans le fichier `uosc.conf`. La configuration officielle par défaut de uosc peut ressembler à ceci :
 
 ```
 controls=menu,gap,subtitles,<has_many_audio>audio,<has_many_video>video,<has_many_edition>editions,<stream>stream-quality,gap,space,speed,space,shuffle,loop-playlist,loop-file,gap,prev,items,next,gap,fullscreen
 ```
 
-在 `controls`控件配置项中添加 `button:danmaku`的弹幕搜索按钮和 `cycle:toggle_on:show_danmaku@uosc_danmaku:on=toggle_on/off=toggle_off?弹幕开关`的弹幕开关。放置的位置就是实际会在在进度条上方的控件条中显示的位置，可以放在自己喜欢的位置。我个人把这两个控件放在了 `<stream>stream-quality`画质选择控件后边。添加完控件的配置大概如下：
+Dans l’option `controls`, ajoutez le bouton de recherche des danmaku `button:danmaku` et l’interrupteur `cycle:toggle_on:show_danmaku@uosc_danmaku:on=toggle_on/off=toggle_off?Danmaku`. Leur position dans la liste détermine leur emplacement réel dans la barre de commandes située au-dessus de la barre de progression ; placez-les où vous le souhaitez. Personnellement, je les ai placés après la commande de sélection de la qualité vidéo `<stream>stream-quality`. Après leur ajout, la configuration devrait ressembler à ceci :
 
 ```
-controls=menu,gap,subtitles,<has_many_audio>audio,<has_many_video>video,<has_many_edition>editions,<stream>stream-quality,button:danmaku,cycle:toggle_on:show_danmaku@uosc_danmaku:on=toggle_on/off=toggle_off?弹幕开关,gap,space,speed,space,shuffle,loop-playlist,loop-file,gap,prev,items,next,gap,fullscreen
+controls=menu,gap,subtitles,<has_many_audio>audio,<has_many_video>video,<has_many_edition>editions,<stream>stream-quality,button:danmaku,cycle:toggle_on:show_danmaku@uosc_danmaku:on=toggle_on/off=toggle_off?Danmaku,gap,space,speed,space,shuffle,loop-playlist,loop-file,gap,prev,items,next,gap,fullscreen
 ```
 
 </details>
 
 <details>
-<summary>旧版uosc控件配置步骤</summary>
+<summary>Procédure de configuration des commandes des anciennes versions de uosc</summary>
 
-找到 `uosc.conf`文件中的 `controls`配置项，uosc官方默认的配置可能如下：
+Repérez l’option `controls` dans le fichier `uosc.conf`. La configuration officielle par défaut de uosc peut ressembler à ceci :
 
 ```
 controls=menu,gap,subtitles,<has_many_audio>audio,<has_many_video>video,<has_many_edition>editions,<stream>stream-quality,gap,space,speed,space,shuffle,loop-playlist,loop-file,gap,prev,items,next,gap,fullscreen
 ```
 
-在 `controls`控件配置项中添加 `command:search:script-message open_search_danmaku_menu?搜索弹幕`的弹幕搜索按钮和 `cycle:toggle_on:show_danmaku@uosc_danmaku:on=toggle_on/off=toggle_off?弹幕开关`的弹幕开关。放置的位置就是实际会在在进度条上方的控件条中显示的位置，可以放在自己喜欢的位置。我个人把这两个控件放在了 `<stream>stream-quality`画质选择控件后边。添加完控件的配置大概如下：
+Dans l’option `controls`, ajoutez le bouton de recherche des danmaku `command:search:script-message open_search_danmaku_menu?Rechercher des danmaku` et l’interrupteur `cycle:toggle_on:show_danmaku@uosc_danmaku:on=toggle_on/off=toggle_off?Danmaku`. Leur position dans la liste détermine leur emplacement réel dans la barre de commandes située au-dessus de la barre de progression ; placez-les où vous le souhaitez. Personnellement, je les ai placés après la commande de sélection de la qualité vidéo `<stream>stream-quality`. Après leur ajout, la configuration devrait ressembler à ceci :
 
 ```
-controls=menu,gap,subtitles,<has_many_audio>audio,<has_many_video>video,<has_many_edition>editions,<stream>stream-quality,command:search:script-message open_search_danmaku_menu?搜索弹幕,cycle:toggle_on:show_danmaku@uosc_danmaku:on=toggle_on/off=toggle_off?弹幕开关,gap,space,speed,space,shuffle,loop-playlist,loop-file,gap,prev,items,next,gap,fullscreen
+controls=menu,gap,subtitles,<has_many_audio>audio,<has_many_video>video,<has_many_edition>editions,<stream>stream-quality,command:search:script-message open_search_danmaku_menu?Rechercher des danmaku,cycle:toggle_on:show_danmaku@uosc_danmaku:on=toggle_on/off=toggle_off?Danmaku,gap,space,speed,space,shuffle,loop-playlist,loop-file,gap,prev,items,next,gap,fullscreen
 ```
 
 </details>
 
 <details>
-<summary>修改uosc控件（可选）</summary>
+<summary>Modifier les commandes de uosc (facultatif)</summary>
 
-如果出于重名等各种原因，无法将本插件所放置的文件夹命名为 `uosc_danmaku`的话，需要修改 `cycle:toggle_on:show_danmaku@uosc_danmaku:on=toggle_on/off=toggle_off?弹幕开关`的弹幕开关配置中的 `uosc_danmaku`为放置本插件的文件夹的名称。假如将本插件放置在 `my_folder`文件夹下，那么弹幕开关配置就要修改为 `cycle:toggle_on:show_danmaku@my_folder:on=toggle_on/off=toggle_off?弹幕开关`
+Si, pour éviter un conflit de noms ou pour toute autre raison, vous ne pouvez pas nommer `uosc_danmaku` le dossier contenant cette extension, remplacez `uosc_danmaku` dans la configuration de l’interrupteur `cycle:toggle_on:show_danmaku@uosc_danmaku:on=toggle_on/off=toggle_off?Danmaku` par le nom du dossier contenant l’extension. Par exemple, si vous l’avez placée dans un dossier nommé `my_folder`, utilisez `cycle:toggle_on:show_danmaku@my_folder:on=toggle_on/off=toggle_off?Danmaku` pour l’interrupteur des danmaku.
 
 </details>
 
-#### 绑定快捷键（可选）
+#### Associer des raccourcis clavier (facultatif)
 
-对于坚定的键盘爱好者和不使用鼠标主义者，可以选择通过快捷键调用弹幕搜索和弹幕开关功能
+Les adeptes convaincus du clavier et les utilisateurs qui préfèrent se passer de la souris peuvent lancer la recherche et activer ou désactiver les danmaku à l’aide de raccourcis clavier.
 
-快捷键已经进行了默认绑定。默认情况下弹幕搜索功能绑定“Ctrl+d”；弹幕开关功能绑定“j”
+Des raccourcis sont déjà définis par défaut. La recherche de danmaku est associée à « Ctrl+d » et l’activation des danmaku à « j ».
 
-弹幕搜索功能绑定的脚本消息为 `open_search_danmaku_menu`，弹幕开关功能绑定的脚本消息为 `show_danmaku_keyboard`
+Le message de script associé à la recherche de danmaku est `open_search_danmaku_menu`, tandis que celui associé à l’activation des danmaku est `show_danmaku_keyboard`.
 
-如需配置快捷键，只需在 `input.conf`中添加如下行即可，快捷键可以改为自己喜欢的按键组合。
+Pour configurer ces raccourcis, ajoutez simplement les lignes suivantes à `input.conf`. Vous pouvez remplacer les touches par les combinaisons de votre choix.
 
 ```
 Ctrl+d script-message open_search_danmaku_menu
 j script-message show_danmaku_keyboard
 ```
 
-> 根据[此issue中的需求](https://github.com/Tony15246/uosc_danmaku/issues/6)，添加了通过uosc_danmaku.conf绑定快捷键的功能。（请注意，最高优先级仍然是input.conf中设置的快捷键）
-> 想要在uosc_danmaku.conf中自定义快捷键，可以像下面这样更改默认快捷键。
+> À la suite d’une demande formulée dans [cette issue](https://github.com/Tony15246/uosc_danmaku/issues/6), il est désormais possible d’associer les raccourcis dans uosc_danmaku.conf. (Notez que les raccourcis définis dans input.conf restent prioritaires.)
+> Pour personnaliser les raccourcis dans uosc_danmaku.conf, modifiez les valeurs par défaut comme ci-dessous.
 
 ```
 open_search_danmaku_menu_key=Ctrl+i
 show_danmaku_keyboard_key=i
 ```
 
-## 拓展功能（可选）
+## Fonctions avancées (facultatif)
 
-本插件针对弹幕有全方面的拓展功能
+Cette extension propose un ensemble complet de fonctions avancées consacrées aux danmaku.
 
 ---
 
-**带控件的功能**
+**Fonctions accessibles par des commandes**
 
 <details>
-<summary>从弹幕源向当前弹幕添加新弹幕内容（从网络url或本地添加弹幕）</summary>
+<summary>Ajouter de nouveaux danmaku à la liste actuelle depuis une source (en ligne ou locale)</summary>
 
-> #### 从弹幕源向当前弹幕添加新弹幕内容（可选）
+> #### Ajouter de nouveaux danmaku depuis une source (facultatif)
 
-从弹幕源添加弹幕。在已经在播放弹幕的情况下会将添加的弹幕追加到现有弹幕中。
+Ajoute des danmaku depuis une source. Si des danmaku sont déjà en cours de lecture, les nouveaux seront ajoutés à la liste existante.
 
-可添加的弹幕源如哔哩哔哩上任意视频通过video路径加BV号，或者巴哈姆特上的视频地址等。比如说以下地址均可作为有效弹幕源被添加：
+Parmi les sources acceptées figurent, par exemple, n’importe quelle vidéo Bilibili indiquée par une URL `/video/` suivie de son identifiant BV, ou encore une adresse de vidéo Bahamut Anime. Les adresses suivantes constituent toutes deux des sources de danmaku valides :
 
 ```
 https://www.bilibili.com/video/BV1kx411o7Yo
 https://ani.gamer.com.tw/animeVideo.php?sn=36843
 ```
 
-此功能通过调用弹弹Play的extcomment接口实现获取第三方弹幕站（如A/B/C站）上指定网址对应的弹幕。想要启用此功能，需要参照[uosc控件配置](#uosc控件配置)，根据uosc版本添加 `button:danmaku_source`或 `command:add_box:script-message open_add_source_menu?从源添加弹幕`到 `uosc.conf`的controls配置项中。
+Cette fonction appelle l’interface extcomment de DanDanPlay pour récupérer les danmaku correspondant à une URL donnée sur un site tiers (comme les sites A/B/C). Pour l’activer, reportez-vous à la [configuration des commandes de uosc](#configuration-des-commandes-de-uosc) et ajoutez `button:danmaku_source` ou `command:add_box:script-message open_add_source_menu?Ajouter des danmaku depuis une source` à l’option controls de `uosc.conf`, selon votre version de uosc.
 
-想要通过快捷键使用此功能，请添加类似下面的配置到 `input.conf`中。从源添加弹幕功能对应的脚本消息为 `open_add_source_menu`。
+Pour utiliser cette fonction au moyen d’un raccourci clavier, ajoutez une configuration semblable à celle ci-dessous dans `input.conf`. Le message de script correspondant à l’ajout de danmaku depuis une source est `open_add_source_menu`.
 
 ```
 key script-message open_add_source_menu
 ```
 
-现已添加了对加载本地弹幕文件的支持，输入本地弹幕文件的绝对路径即可使用本插件加载弹幕。加载出来的弹幕样式同在本插件中设置的弹幕样式。支持的文件格式有ass文件和xml文件。具体可参见[此issue](https://github.com/Tony15246/uosc_danmaku/issues/26)
+Le chargement de fichiers de danmaku locaux est désormais pris en charge. Saisissez le chemin absolu d’un fichier local pour charger ses danmaku avec cette extension. Leur style sera celui défini dans l’extension. Les formats pris en charge sont les fichiers ASS et XML. Pour plus de détails, consultez [cette issue](https://github.com/Tony15246/uosc_danmaku/issues/26).
 
 ```
-#Linux下示例
+# Exemple sous Linux
 /home/tony/Downloads/example.xml
-#Windows下示例
+# Exemple sous Windows
 C:\Users\Tony\Downloads\example.xml
 ```
 
-现已更新增强了此菜单。现在在该菜单内可以可视化地控制所有弹幕源，删除或者屏蔽任何不想要的弹幕源。对于自己手动添加的弹幕源，可以进行移除。对于来自弹弹play的弹幕源，无法进行移除，但是可以进行屏蔽，将不会再从屏蔽过的弹幕源获取弹幕。当然，也可以解除对来自弹弹play的弹幕源的屏蔽。另外需要注意在菜单内对于弹幕源的可视化操作都需要下次打开视频，或者重新用弹幕搜索功能加载一次弹幕才会生效。
+Ce menu a également été amélioré. Il permet désormais de gérer visuellement toutes les sources de danmaku et de supprimer ou de bloquer celles dont vous ne voulez pas. Les sources que vous avez ajoutées manuellement peuvent être supprimées. Celles provenant de DanDanPlay ne peuvent pas l’être, mais vous pouvez les bloquer afin de ne plus en récupérer les danmaku, puis les débloquer si nécessaire. Notez enfin que toute modification visuelle des sources effectuée dans ce menu ne prendra effet qu’à la prochaine ouverture de la vidéo ou après un nouveau chargement des danmaku au moyen de la fonction de recherche.
 
 </details>
 
 <details>
-<summary>弹幕源延迟设置</summary>
+<summary>Réglage du décalage des sources de danmaku</summary>
 
-> #### 弹幕源延迟设置（可选）
+> #### Réglage du décalage des sources de danmaku (facultatif)
 
-可以独立控制每个弹幕源的延迟，延迟支持两种输入模式。第一种模式为输入数字（最高可精确到小数点后两位），单位为秒；第二种输入模式为输入形如 `14m15s`格式的字符串，代表延迟的分钟数和秒数。
+Vous pouvez régler séparément le décalage de chaque source de danmaku. Deux modes de saisie sont possibles : saisir un nombre en secondes, avec une précision maximale de deux décimales, ou saisir une chaîne au format `14m15s`, qui représente le décalage en minutes et en secondes.
 
-想要启用此功能，需要参照[uosc控件配置](#uosc控件配置)，根据uosc版本添加 `button:danmaku_delay`或 `command:more_time:script-message open_source_delay_menu?弹幕源延迟设置`到 `uosc.conf`的controls配置项中。
+Pour activer cette fonction, reportez-vous à la [configuration des commandes de uosc](#configuration-des-commandes-de-uosc) et ajoutez `button:danmaku_delay` ou `command:more_time:script-message open_source_delay_menu?Décalage des sources de danmaku` à l’option controls de `uosc.conf`, selon votre version de uosc.
 
-想要通过快捷键使用此功能，请添加类似下面的配置到 `input.conf`中。弹幕源延迟设置功能对应的脚本消息为 `open_source_delay_menu`。
+Pour utiliser cette fonction au moyen d’un raccourci clavier, ajoutez une configuration semblable à celle ci-dessous dans `input.conf`. Le message de script correspondant au réglage du décalage des sources de danmaku est `open_source_delay_menu`.
 
 ```
 key script-message open_source_delay_menu
@@ -280,13 +280,13 @@ key script-message open_source_delay_menu
 </details>
 
 <details>
-<summary> 实时修改弹幕样式</summary>
+<summary> Modifier le style des danmaku en temps réel</summary>
 
-> #### 实时修改弹幕样式（可选）
+> #### Modifier le style des danmaku en temps réel (facultatif)
 
-依赖于[uosc UI框架](https://github.com/tomasklaen/uosc)实现**弹幕样式实时修改**，将打开弹幕样式修改图形化菜单供用户手动修改（默认使用[自定义弹幕样式](#自定义弹幕样式相关配置)里的样式配置）。想要启用此功能，需要参照[uosc控件配置](#uosc控件配置)，根据uosc版本添加 `button:danmaku_styles`或 `command:palette:script-message open_danmaku_style_menu?弹幕样式`到 `uosc.conf`的controls配置项中。
+Cette fonction s’appuie sur l’[interface uosc](https://github.com/tomasklaen/uosc) pour permettre la **modification en temps réel du style des danmaku**. Elle ouvre un menu graphique dans lequel l’utilisateur peut modifier manuellement leur style (la [configuration du style personnalisé des danmaku](#configuration-du-style-personnalisé-des-danmaku) est utilisée par défaut). Pour l’activer, reportez-vous à la [configuration des commandes de uosc](#configuration-des-commandes-de-uosc) et ajoutez `button:danmaku_styles` ou `command:palette:script-message open_danmaku_style_menu?Style des danmaku` à l’option controls de `uosc.conf`, selon votre version de uosc.
 
-想要通过快捷键使用此功能，请添加类似下面的配置到 `input.conf`中。实时修改弹幕样式功能对应的脚本消息为 `open_danmaku_style_menu`。
+Pour utiliser cette fonction au moyen d’un raccourci clavier, ajoutez une configuration semblable à celle ci-dessous dans `input.conf`. Le message de script correspondant à la modification en temps réel du style des danmaku est `open_danmaku_style_menu`.
 
 ```
 key script-message open_danmaku_style_menu
@@ -295,13 +295,13 @@ key script-message open_danmaku_style_menu
 </details>
 
 <details>
-<summary> 弹幕设置总菜单</summary>
+<summary> Menu général des réglages des danmaku</summary>
 
-> #### 弹幕设置总菜单（可选）
+> #### Menu général des réglages des danmaku (facultatif)
 
-打开多级功能复合菜单，包含了插件目前所有的图形化功能。想要启用此功能，需要参照[uosc控件配置](#uosc控件配置)，根据uosc版本添加 `button:danmaku_menu`或 `command:grid_view:script-message open_add_total_menu?弹幕设置`到 `uosc.conf`的controls配置项中。
+Ouvre un menu composite à plusieurs niveaux regroupant toutes les fonctions graphiques actuellement proposées par le plugin. Pour activer cette fonction, reportez-vous à la [configuration des commandes de uosc](#configuration-des-commandes-de-uosc) et, selon la version d’uosc, ajoutez `button:danmaku_menu` ou `command:grid_view:script-message open_add_total_menu?弹幕设置` à l’option de configuration `controls` de `uosc.conf`.
 
-想要通过快捷键使用此功能，请添加类似下面的配置到 `input.conf`中。从源添加弹幕功能对应的脚本消息为 `open_add_total_menu`。
+Pour utiliser cette fonction avec un raccourci clavier, ajoutez une configuration semblable à celle ci-dessous dans `input.conf`. Le message de script correspondant à la fonction d’ajout de danmaku depuis une source est `open_add_total_menu`.
 
 ```
 key script-message open_add_total_menu
@@ -311,34 +311,34 @@ key script-message open_add_total_menu
 
 ---
 
-**仅快捷键的功能**
+**Fonctions accessibles uniquement par raccourci clavier**
 
 <details>
-<summary>设置弹幕延迟</summary>
+<summary>Régler le décalage des danmaku</summary>
 
-> #### 设置弹幕延迟（可选）
+> #### Régler le décalage des danmaku (facultatif)
 
-可以通过快捷键绑定以下命令来调整弹幕延迟，单位：秒。秒数的含义为在当前弹幕延迟的基础上叠加新设置的延迟秒数进行调整，可以设置为负数。另外，设置为0时为特殊情况，会将弹幕延迟重置为0，回到初始状态。
+Vous pouvez associer la commande suivante à un raccourci clavier afin de régler le décalage des danmaku, en secondes. Le nombre de secondes indiqué s’ajoute au décalage actuel des danmaku ; il peut être négatif. La valeur 0 constitue un cas particulier : elle réinitialise le décalage à 0 et rétablit l’état initial.
 
 ```
-# 设置整体弹幕延迟
+# Régler le décalage global des danmaku
 key script-message danmaku-delay <seconds>
-# 设置当前播放时间点的弹幕延迟
+# Régler le décalage des danmaku à partir de la position de lecture actuelle
 key script-message danmaku-delay <seconds> ${=time-pos}
 ```
 
-> 当前弹幕延迟的值可以从 `user-data/uosc_danmaku/danmaku-delay`属性中获取到，具体用法可以参考[此issue](https://github.com/Tony15246/uosc_danmaku/issues/77)
+> La valeur actuelle du décalage des danmaku est disponible dans la propriété `user-data/uosc_danmaku/danmaku-delay`. Pour un exemple d’utilisation, consultez [cette issue](https://github.com/Tony15246/uosc_danmaku/issues/77).
 
 </details>
 
 <details>
-<summary>保存当前视频弹幕</summary>
+<summary>Enregistrer les danmaku de la vidéo actuelle</summary>
 
-> #### 保存当前视频弹幕（可选）
+> #### Enregistrer les danmaku de la vidéo actuelle (facultatif)
 
-在视频播放时手动保存弹幕，保存格式为 `xml`（注：此功能将保存为视频同名弹幕，若目标文件夹下存在同名文件将不会执行该功能）。默认保存至视频所在文件夹，也可以通过 `save_danmaku_path` 和 `save_danmaku_path_mode` 保存到指定文件夹。
+Permet d’enregistrer manuellement les danmaku pendant la lecture d’une vidéo, au format `xml` (remarque : le fichier de danmaku portera le même nom que la vidéo ; si un fichier du même nom existe déjà dans le dossier de destination, l’opération ne sera pas exécutée). Par défaut, il est enregistré dans le dossier de la vidéo, mais `save_danmaku_path` et `save_danmaku_path_mode` permettent de choisir un autre dossier.
 
-想要通过快捷键使用此功能，请添加类似下面的配置到 `input.conf`中。从源添加弹幕功能对应的脚本消息为 `immediately_save_danmaku`。
+Pour utiliser cette fonction avec un raccourci clavier, ajoutez une configuration semblable à celle ci-dessous dans `input.conf`. Le message de script correspondant à cette fonction est `immediately_save_danmaku`.
 
 ```
 key script-message immediately_save_danmaku
@@ -347,13 +347,13 @@ key script-message immediately_save_danmaku
 </details>
 
 <details>
-<summary>清空当前视频关联的弹幕源</summary>
+<summary>Effacer les sources de danmaku associées à la vidéo actuelle</summary>
 
-> #### 清空当前视频关联的弹幕源（可选）
+> #### Effacer les sources de danmaku associées à la vidéo actuelle (facultatif)
 
-可以清空当前视频中，用户通过[从源获取弹幕](#从弹幕源向当前弹幕添加新弹幕内容可选)菜单手动添加的所有弹幕源（注意该功能不会删除来源于弹幕服务器的弹幕，此类弹幕只能屏蔽或者手动重新匹配新弹幕库）。清空过弹幕源之后，下次播放该视频，就不会再加载之前手动添加过的弹幕源，可以重新添加弹幕源。
+Permet d’effacer toutes les sources de danmaku que l’utilisateur a ajoutées manuellement à la vidéo actuelle depuis le menu [Obtenir des danmaku depuis une source](#ajouter-de-nouveaux-danmaku-depuis-une-source-facultatif). Cette fonction ne supprime pas les danmaku provenant du serveur de danmaku ; ceux-ci peuvent uniquement être masqués ou remplacés en associant manuellement une nouvelle bibliothèque de danmaku. Après avoir effacé les sources, elles ne seront plus chargées lors de la prochaine lecture de cette vidéo et vous pourrez les associer de nouveau.
 
-想要通过快捷键使用此功能，请添加类似下面的配置到 `input.conf`中。从源添加弹幕功能对应的脚本消息为 `clear-source`。
+Pour utiliser cette fonction avec un raccourci clavier, ajoutez une configuration semblable à celle ci-dessous dans `input.conf`. Le message de script correspondant est `clear-source`.
 
 ```
 key script-message clear-source
@@ -362,13 +362,13 @@ key script-message clear-source
 </details>
 
 <details>
-<summary>检查脚本更新</summary>
+<summary>Rechercher les mises à jour du script</summary>
 
-> #### 检查脚本更新（可选）
+> #### Rechercher les mises à jour du script (facultatif)
 
-可以通过绑定以下脚本命令来实现检查并自动更新脚本
+Vous pouvez associer la commande de script suivante à un raccourci afin de rechercher et d’installer automatiquement les mises à jour du script.
 
-> 只会检查 `Releases`中发布的更新
+> Seules les mises à jour publiées dans les `Releases` seront recherchées.
 
 ```
 key script-message check-update
@@ -378,29 +378,29 @@ key script-message check-update
 
 ---
 
-## 可配置选项（可选）
+## Options configurables (facultatif)
 
-本插件可以在mpv配置文件夹下的 `script-opts`中创建 `uosc_danmaku.conf`文件自定义下例配置开启额外功能或自定义功能细节
+Ce plugin permet de créer un fichier `uosc_danmaku.conf` dans le dossier `script-opts` du répertoire de configuration de mpv afin de personnaliser les options ci-dessous, d’activer des fonctions supplémentaires ou d’en ajuster les détails.
 
-### 弹幕加载相关
+### Chargement des danmaku
 
-<!--  下列是弹幕加载相关  -->
+<!--  Options relatives au chargement des danmaku  -->
 
 <details>
 <summary>
 auto_load
 
-> 开关全自动弹幕填装
+> Active ou désactive le chargement entièrement automatique des danmaku
 
 </summary>
 
 ### auto_load
 
-#### 功能说明
+#### Description
 
-该选项控制是否开启全自动弹幕填装功能。该功能会在为某个文件夹下的某一集番剧加载过一次弹幕后，把加载过的弹幕会自动关联到该集。之后每次重新播放该文件就会自动加载对应的弹幕，同时该文件对应的文件夹下的所有其他集数的文件都会在播放时自动加载弹幕。
+Cette option contrôle l’activation du chargement entièrement automatique des danmaku. Après le premier chargement des danmaku pour un épisode d’une série situé dans un dossier, les danmaku chargés sont automatiquement associés à cet épisode. À chaque lecture ultérieure du fichier, les danmaku correspondants seront chargés automatiquement. Tous les fichiers des autres épisodes présents dans le même dossier chargeront eux aussi automatiquement leurs danmaku lors de leur lecture.
 
-举个例子，比如说有一个文件夹结构如下
+Prenons, par exemple, la structure de dossier suivante :
 
 ```
 败犬女主太多了
@@ -414,17 +414,17 @@ auto_load
 └── KitaujiSub_Make_Heroine_ga_Oosugiru!_08WebRipHEVC_AACCHS_JP.mp4
 ```
 
-只要在播放第一集 `KitaujiSub_Make_Heroine_ga_Oosugiru!_01WebRipHEVC_AACCHS_JP.mp4`的时候手动搜索并且加载过一次弹幕，那么打开第二集时就会直接自动加载第二集的弹幕，打开第三集时就会直接加载第三集的弹幕，以此类推，不用再手动搜索
+Il suffit de rechercher et de charger manuellement les danmaku une fois pendant la lecture du premier épisode, `KitaujiSub_Make_Heroine_ga_Oosugiru!_01WebRipHEVC_AACCHS_JP.mp4`. Les danmaku du deuxième épisode seront alors chargés automatiquement à son ouverture, puis ceux du troisième épisode, et ainsi de suite, sans nouvelle recherche manuelle.
 
-#### 使用方法
+#### Utilisation
 
-想要开启此选项，请在mpv配置文件夹下的 `script-opts`中创建 `uosc_danmaku.conf`文件并添加如下内容：
+Pour activer cette option, créez un fichier `uosc_danmaku.conf` dans le dossier `script-opts` du répertoire de configuration de mpv et ajoutez-y le contenu suivant :
 
 ```
 auto_load=yes
 ```
 
-注意⚠️： 一个文件夹下有且仅有一同部番剧的若干视频文件才会生效。下面这种情况下，如果手动搜索并且加载过一次《少女歌剧》第一集的弹幕，《哭泣少女乐队》第二集必须重新手动识别，但这样会破坏《少女歌剧》的弹幕记录
+Attention ⚠️ : cette fonction n’est effective que si le dossier contient exclusivement plusieurs fichiers vidéo d’une seule et même série. Dans l’exemple ci-dessous, si vous recherchez et chargez manuellement les danmaku du premier épisode de « Revue Starlight », le deuxième épisode de « Girls Band Cry » devra être identifié manuellement à nouveau, ce qui écrasera les informations de danmaku de « Revue Starlight ».
 
 ```
 少女歌剧
@@ -443,23 +443,23 @@ auto_load=yes
 <summary>
 autoload_for_url
 
-> 开关url播放场景自动加载弹幕与关联继承
+> Active ou désactive le chargement automatique et l’héritage des associations de danmaku lors de la lecture d’URL
 
 </summary>
 
 ### autoload_for_url
 
-#### 功能说明
+#### Description
 
-开启此选项后，会为可能支持的 url 视频文件实现弹幕关联记忆和继承，配合播放列表食用效果最佳。目前兼容在使用[embyToLocalPlayer](https://github.com/kjtsune/embyToLocalPlayer)、[mpv-torrserver](https://github.com/dyphire/mpv-config/blob/master/scripts/mpv-torrserver.lua)、[tsukimi](https://github.com/tsukinaha/tsukimi)等场景时进行弹幕关联记忆和继承。
+Lorsque cette option est activée, les associations de danmaku des fichiers vidéo accessibles par URL potentiellement pris en charge sont mémorisées et héritées. Son utilisation avec une liste de lecture donne les meilleurs résultats. La mémorisation et l’héritage des associations de danmaku sont actuellement compatibles avec des solutions telles que [embyToLocalPlayer](https://github.com/kjtsune/embyToLocalPlayer), [mpv-torrserver](https://github.com/dyphire/mpv-config/blob/master/scripts/mpv-torrserver.lua) et [tsukimi](https://github.com/tsukinaha/tsukimi).
 
-目前的具体支持情况和实现效果可以参考[此pr](https://github.com/Tony15246/uosc_danmaku/pull/16)
+Pour connaître précisément la compatibilité actuelle et le résultat obtenu, consultez [cette PR](https://github.com/Tony15246/uosc_danmaku/pull/16).
 
-另外，开启此选项后还会在网络播放bilibili以及巴哈姆特的视频时自动加载对应视频的弹幕，可配合[Play-With-MPV](https://github.com/LuckyPuppy514/Play-With-MPV)或[ff2mpv](https://github.com/woodruffw/ff2mpv)等网络播放手段使用。（播放巴哈姆特的视频时弹幕自动加载如果失败，请检查[proxy](#proxy)选项配置是否正确）
+Une fois cette option activée, les danmaku correspondants sont également chargés automatiquement lors de la lecture en ligne de vidéos Bilibili et Bahamut. Elle peut être utilisée avec des solutions de lecture en ligne telles que [Play-With-MPV](https://github.com/LuckyPuppy514/Play-With-MPV) ou [ff2mpv](https://github.com/woodruffw/ff2mpv). Si le chargement automatique des danmaku échoue pendant la lecture d’une vidéo Bahamut, vérifiez que l’option [proxy](#proxy) est correctement configurée.
 
-#### 使用方法
+#### Utilisation
 
-想要开启此选项，请在mpv配置文件夹下的 `script-opts`中创建 `uosc_danmaku.conf`文件并添加如下内容：
+Pour activer cette option, créez un fichier `uosc_danmaku.conf` dans le dossier `script-opts` du répertoire de configuration de mpv et ajoutez-y le contenu suivant :
 
 ```
 autoload_for_url=yes
@@ -473,19 +473,19 @@ autoload_for_url=yes
 <summary>
 auto_fallback_search
 
-> 开关全自动弹幕填装失败后弹出搜索框
+> Active ou désactive l’affichage de la boîte de recherche après l’échec du chargement entièrement automatique des danmaku
 
 </summary>
 
 ### auto_fallback_search
 
-#### 功能说明
+#### Description
 
-开启此选项后，当全自动弹幕填装选项 `auto_load=yes` 使用时，弹幕自动加载匹配全部失败后，弹出搜索框让用户手动搜索，默认关闭不使用
+Lorsque cette option est activée et que le chargement entièrement automatique des danmaku avec `auto_load=yes` échoue pour toutes les correspondances, une boîte de recherche s’affiche afin que l’utilisateur puisse effectuer une recherche manuelle. Cette option est désactivée par défaut.
 
-#### 使用方法
+#### Utilisation
 
-想要开启此选项，请在mpv配置文件夹下的 `script-opts`中创建 `uosc_danmaku.conf`文件并添加如下内容：
+Pour activer cette option, créez un fichier `uosc_danmaku.conf` dans le dossier `script-opts` du répertoire de configuration de mpv et ajoutez-y le contenu suivant :
 
 ```
 auto_fallback_search=yes
@@ -499,19 +499,19 @@ auto_fallback_search=yes
 <summary>
 autoload_local_danmaku
 
-> 开关自动加载同目录下的xml格式弹幕文件
+> Active ou désactive le chargement automatique des fichiers de danmaku au format XML situés dans le même dossier
 
 </summary>
 
 ### autoload_local_danmaku
 
-#### 功能说明
+#### Description
 
-自动加载播放文件同目录下同名的 xml 格式的弹幕文件
+Charge automatiquement le fichier de danmaku au format XML portant le même nom et situé dans le même dossier que le fichier lu.
 
-#### 使用方法
+#### Utilisation
 
-想要开启此选项，请在mpv配置文件夹下的 `script-opts`中创建 `uosc_danmaku.conf`文件并添加如下内容：
+Pour activer cette option, créez un fichier `uosc_danmaku.conf` dans le dossier `script-opts` du répertoire de configuration de mpv et ajoutez-y le contenu suivant :
 
 ```
 autoload_local_danmaku=yes
@@ -525,45 +525,45 @@ autoload_local_danmaku=yes
 <summary>
 save_danmaku
 
-> 开关自动保存弹幕文件（xml格式）至视频同目录
+> Active ou désactive l’enregistrement automatique des fichiers de danmaku (au format XML) dans le dossier de la vidéo
 
 </summary>
 
 ### save_danmaku
 
-#### 功能说明
+#### Description
 
-当文件关闭时自动保存弹幕文件（xml格式），保存的弹幕文件名与对应的视频文件名相同。默认保存至视频同目录，配合[autoload_local_danmaku选项](#autoload_local_danmaku)可以实现弹幕自动保存到本地并且下次播放时自动加载本地保存的弹幕。此功能默认禁用。
+À la fermeture du fichier, enregistre automatiquement les danmaku au format XML dans un fichier portant le même nom que la vidéo correspondante. Par défaut, ce fichier est enregistré dans le dossier de la vidéo. Associée à l’[option autoload_local_danmaku](#autoload_local_danmaku), cette fonction permet d’enregistrer automatiquement les danmaku en local, puis de les charger automatiquement lors de la lecture suivante. Cette fonction est désactivée par défaut.
 
-> **⚠️NOTE！**
+> **⚠️ REMARQUE !**
 > 
-> 当开启[autoload_local_danmaku选项](#autoload_local_danmaku)时，会自动加载播放文件同目录下同名的 xml 格式的弹幕文件，优先级高于一切其他自动加载弹幕功能。如果不希望每次播放都加载之前保存的本地弹幕，则请关闭[autoload_local_danmaku选项](#autoload_local_danmaku)；或者在保存完弹幕之后转移弹幕文件至其他路径并关闭 `save_danmaku`选项。
+> Lorsque l’[option autoload_local_danmaku](#autoload_local_danmaku) est activée, le fichier de danmaku au format XML portant le même nom et situé dans le même dossier que le fichier lu est chargé automatiquement, avec une priorité supérieure à toutes les autres fonctions de chargement automatique des danmaku. Si vous ne souhaitez pas charger à chaque lecture les danmaku précédemment enregistrés en local, désactivez l’[option autoload_local_danmaku](#autoload_local_danmaku). Vous pouvez également déplacer le fichier de danmaku vers un autre emplacement après son enregistrement, puis désactiver l’option `save_danmaku`.
 > 
-> `save_danmaku`选项的打开和关闭可以运行时实时更新。在 `input.conf`中添加如下内容，可通过快捷键实时控制 `save_danmaku`选项的打开和关闭
+> L’option `save_danmaku` peut être activée ou désactivée en temps réel pendant l’exécution. Ajoutez le contenu suivant à `input.conf` afin de contrôler son activation au moyen d’un raccourci clavier :
 > 
 > ```
 > key cycle-values script-opts uosc_danmaku-save_danmaku=yes uosc_danmaku-save_danmaku=no
 > ```
 
-#### 使用方法
+#### Utilisation
 
-想要启用此选项，请在mpv配置文件夹下的 `script-opts`中创建 `uosc_danmaku.conf`文件并指定如下内容：
+Pour activer cette option, créez un fichier `uosc_danmaku.conf` dans le dossier `script-opts` du répertoire de configuration de mpv et indiquez le contenu suivant :
 
 ```
 save_danmaku=yes
 ```
 
-如需保存到指定文件夹，请提前创建目标文件夹，然后配置 `save_danmaku_path` 和 `save_danmaku_path_mode`。插件不会自动创建目录。
+Pour enregistrer les fichiers dans un dossier donné, créez d’abord le dossier de destination, puis configurez `save_danmaku_path` et `save_danmaku_path_mode`. Le plugin ne crée pas les dossiers automatiquement.
 
-保存本地媒体到指定文件夹时，文件名会包含视频父目录名，用于减少不同目录下同名视频的弹幕文件冲突。例如 `动画/01.mkv` 会保存为类似 `动画_01.xml`。网络媒体保存到指定文件夹时仍使用媒体标题作为文件名。
+Lorsqu’un média local est enregistré dans un dossier donné, le nom du fichier inclut celui du dossier parent de la vidéo afin de réduire les conflits entre les fichiers de danmaku de vidéos de même nom placées dans des dossiers différents. Par exemple, `动画/01.mkv` sera enregistré sous un nom tel que `动画_01.xml`. Pour un média en ligne enregistré dans un dossier donné, le titre du média reste utilisé comme nom de fichier.
 
-`save_danmaku_path_mode` 可选值如下：
+Valeurs possibles de `save_danmaku_path_mode` :
 
-- `local`：默认值，仅本地媒体保存到 `save_danmaku_path`，网络媒体仍不保存
-- `url`：仅网络媒体保存到 `save_danmaku_path`，本地媒体仍保存到视频同目录
-- `all`：本地媒体和网络媒体都保存到 `save_danmaku_path`
+- `local` : valeur par défaut ; seuls les médias locaux sont enregistrés dans `save_danmaku_path`, tandis que les médias en ligne ne sont toujours pas enregistrés
+- `url` : seuls les médias en ligne sont enregistrés dans `save_danmaku_path`, tandis que les médias locaux restent enregistrés dans le dossier de la vidéo
+- `all` : les médias locaux et en ligne sont tous enregistrés dans `save_danmaku_path`
 
-例如，仅将网络媒体的弹幕保存到 `~~/danmaku`：
+Exemple pour enregistrer uniquement les danmaku des médias en ligne dans `~~/danmaku` :
 
 ```
 save_danmaku=yes
@@ -571,7 +571,7 @@ save_danmaku_path=~~/danmaku
 save_danmaku_path_mode=url
 ```
 
-例如，将所有媒体的弹幕都保存到 `~~/danmaku`：
+Exemple pour enregistrer les danmaku de tous les médias dans `~~/danmaku` :
 
 ```
 save_danmaku=yes
@@ -583,29 +583,29 @@ save_danmaku_path_mode=all
 
 ---
 
-### 弹幕显示相关
+### Affichage des danmaku
 
-(如果需要更细节的弹幕样式修改请看[自定义弹幕样式](#自定义弹幕样式相关配置))
+(Pour personnaliser plus finement le style des danmaku, consultez [Personnalisation du style des danmaku](#configuration-personnalisée-du-style-des-danmaku).)
 
-<!--  下列是弹幕显示相关  -->
+<!--  Options relatives à l’affichage des danmaku  -->
 
 <details>
 <summary>
 opacity
 
-> 自定义弹幕的透明度
+> Personnalise l’opacité des danmaku
 
 </summary>
 
 ### opacity
 
-#### 功能说明
+#### Description
 
-自定义弹幕的透明度，0（完全透明）到1（不透明）。默认值：0.7
+Personnalise l’opacité des danmaku, de 0 (entièrement transparents) à 1 (opaques). Valeur par défaut : 0.7
 
-#### 使用方法
+#### Utilisation
 
-想要使用此选项，请在mpv配置文件夹下的 `script-opts`中创建 `uosc_danmaku.conf`文件并自定义如下内容：
+Pour utiliser cette option, créez un fichier `uosc_danmaku.conf` dans le répertoire `script-opts` du dossier de configuration de mpv, puis personnalisez son contenu comme suit :
 
 ```
 opacity=0.7
@@ -619,19 +619,19 @@ opacity=0.7
 <summary>
 chConvert
 
-> 开关中文简繁转换
+> Active ou désactive la conversion entre chinois simplifié et traditionnel
 
 </summary>
 
 ### chConvert
 
-#### 功能说明
+#### Description
 
-中文简繁转换。0-不转换，1-转换为简体，2-转换为繁体。默认值: 0，不转换简繁字体，按照弹幕源原本字体显示
+Conversion entre chinois simplifié et traditionnel. 0 : aucune conversion ; 1 : conversion en chinois simplifié ; 2 : conversion en chinois traditionnel. Valeur par défaut : 0, aucune conversion ; les danmaku sont affichés dans leur graphie d’origine
 
-#### 使用方法
+#### Utilisation
 
-想要使用此选项，请在mpv配置文件夹下的 `script-opts`中创建 `uosc_danmaku.conf`文件并自定义如下内容：
+Pour utiliser cette option, créez un fichier `uosc_danmaku.conf` dans le répertoire `script-opts` du dossier de configuration de mpv, puis personnalisez son contenu comme suit :
 
 ```
 chConvert=0
@@ -645,21 +645,21 @@ chConvert=0
 <summary>
 merge_tolerance
 
-> 开关合并重复弹幕并设置容差值
+> Active ou désactive la fusion des danmaku en double et définit la valeur de tolérance
 
 </summary>
 
 ### merge_tolerance
 
-#### 功能说明
+#### Description
 
-指定合并重复弹幕的时间间隔的容差值，单位为秒。默认值: -1，表示禁用
+Définit la tolérance de l’intervalle temporel utilisé pour fusionner les danmaku en double, en secondes. Valeur par défaut : -1, ce qui désactive la fonctionnalité
 
-当值设为0时会合并同一时间相同内容的弹幕，值大于0时会合并指定秒数误差内的相同内容的弹幕
+Lorsque cette valeur est définie sur 0, les danmaku au contenu identique et apparaissant au même instant sont fusionnés. Lorsqu’elle est supérieure à 0, les danmaku au contenu identique sont fusionnés s’ils se trouvent dans l’intervalle de tolérance défini, en secondes
 
-#### 使用方法
+#### Utilisation
 
-想要使用此选项，请在mpv配置文件夹下的 `script-opts`中创建 `uosc_danmaku.conf`文件并自定义如下内容：
+Pour utiliser cette option, créez un fichier `uosc_danmaku.conf` dans le répertoire `script-opts` du dossier de configuration de mpv, puis personnalisez son contenu comme suit :
 
 ```
 merge_tolerance=1
@@ -673,22 +673,22 @@ merge_tolerance=1
 <summary>
 merge_without_style
 
-> 决定在合并重复弹幕时是否忽略类型和颜色差异
+> Détermine si les différences de type et de couleur doivent être ignorées lors de la fusion des danmaku en double
 
 </summary>
 
 ### merge_without_style
 
-#### 功能说明
+#### Description
 
-配合 `merge_tolerance` 使用。默认值: `no`（关闭）
+S’utilise avec `merge_tolerance`. Valeur par défaut : `no` (désactivé)
 
-当开启此选项时，即使属于不同位置类型（如顶部、底部、滚动）或不同颜色（无论色差多大），只要弹幕文本内容相同并且在 `merge_tolerance` 指定的时间容差范围内，就会被强制合并成一条弹幕。
-关闭时，仅当弹幕内容相同、位置类型相同、且颜色肉眼不可区分（色差极小）时，才会进行弹幕合并。
+Lorsque cette option est activée, les danmaku dont le texte est identique et qui se trouvent dans l’intervalle de tolérance défini par `merge_tolerance` sont fusionnés de force, même si leur type de positionnement diffère (en haut, en bas ou défilant, par exemple) ou si leur couleur est différente, quelle que soit l’ampleur de cette différence.
+Lorsqu’elle est désactivée, les danmaku ne sont fusionnés que si leur contenu et leur type de positionnement sont identiques et si leur différence de couleur est imperceptible à l’œil nu (différence minime).
 
-#### 使用方法
+#### Utilisation
 
-想要使用此选项，请在mpv配置文件夹下的 `script-opts`中创建 `uosc_danmaku.conf`文件并自定义如下内容：
+Pour utiliser cette option, créez un fichier `uosc_danmaku.conf` dans le répertoire `script-opts` du dossier de configuration de mpv, puis personnalisez son contenu comme suit :
 
 ```
 merge_without_style=yes
@@ -702,23 +702,23 @@ merge_without_style=yes
 <summary>
 merge_fontsize_growth
 
-> 设置合并弹幕字号随合并数量增长的速度
+> Définit la vitesse à laquelle la taille de police des danmaku fusionnés augmente avec leur nombre
 
 </summary>
 
 ### merge_fontsize_growth
 
-#### 功能说明
+#### Description
 
-配合 `merge_tolerance` 使用，默认值为 `8`，必须为正整数。设基础字号为 `fontsize`、合并数量为 `n`，实际字号为：
+S’utilise avec `merge_tolerance`. La valeur par défaut est `8` et doit être un entier positif. En prenant `fontsize` comme taille de police de base et `n` comme nombre de danmaku fusionnés, la taille de police réelle est calculée ainsi :
 
 ```
 min(merge_fontsize_max, fontsize + round(merge_fontsize_growth * ln(n)))
 ```
 
-取整前的对数函数严格递增且严格凹，因此合并数量较小时放大明显，随后每多合并一条弹幕带来的字号增量逐渐减小。取整后的整数字号单调不减，并受 `merge_fontsize_max` 限制。字号较大的弹幕会按实际高度占用连续的 y 轴区间；屏幕可显示区域内找不到无碰撞位置时，该条弹幕会被丢弃。
+Avant l’arrondi, la fonction logarithmique est strictement croissante et strictement concave : l’agrandissement est donc marqué lorsque peu de danmaku sont fusionnés, puis l’augmentation de la taille de police apportée par chaque danmaku supplémentaire diminue progressivement. Après l’arrondi, la taille de police entière ne décroît jamais et reste limitée par `merge_fontsize_max`. Les danmaku utilisant une grande taille de police occupent sur l’axe y un intervalle continu correspondant à leur hauteur réelle ; si aucune position sans collision n’est disponible dans la zone d’affichage de l’écran, ils sont ignorés.
 
-#### 使用方法
+#### Utilisation
 
 ```
 merge_fontsize_growth=8
@@ -732,17 +732,17 @@ merge_fontsize_growth=8
 <summary>
 merge_fontsize_max
 
-> 限制合并弹幕的最大字号
+> Limite la taille de police maximale des danmaku fusionnés
 
 </summary>
 
 ### merge_fontsize_max
 
-#### 功能说明
+#### Description
 
-配合 `merge_fontsize_growth` 使用，默认值为 `100`。无论合并数量多大，最终字号都不会超过该值；如果该值小于基础字号 `fontsize`，则使用基础字号。
+S’utilise avec `merge_fontsize_growth`. La valeur par défaut est `100`. Quel que soit le nombre de danmaku fusionnés, la taille de police finale ne dépassera pas cette valeur ; si celle-ci est inférieure à la taille de base `fontsize`, la taille de base sera utilisée.
 
-#### 使用方法
+#### Utilisation
 
 ```
 merge_fontsize_max=100
@@ -756,19 +756,19 @@ merge_fontsize_max=100
 <summary>
 max_screen_danmaku
 
-> 限制屏幕中同时显示的弹幕数量
+> Limite le nombre de danmaku affichés simultanément à l’écran
 
 </summary>
 
 ### max_screen_danmaku
 
-#### 功能说明
+#### Description
 
-当该值大于0时，脚本会在解析弹幕时丢弃部分弹幕，确保任意时刻屏幕中显示的弹幕不超过设定值。
+Lorsque cette valeur est supérieure à 0, le script ignore certains danmaku pendant l’analyse afin que leur nombre affiché à l’écran ne dépasse à aucun moment la limite définie.
 
-#### 使用方法
+#### Utilisation
 
-在 `script-opts` 目录下创建 `uosc_danmaku.conf` 并添加如下内容：
+Créez un fichier `uosc_danmaku.conf` dans le répertoire `script-opts` et ajoutez-y le contenu suivant :
 
 ```
 max_screen_danmaku=60
@@ -782,23 +782,23 @@ max_screen_danmaku=60
 <summary>
 vf_fps
 
-> 开关使用fps视频滤镜提升弹幕平滑度（帧数）
+> Active ou désactive l’utilisation du filtre vidéo fps pour améliorer la fluidité des danmaku (fréquence d’images)
 
 </summary>
 
 ### vf_fps
 
-#### 功能说明
+#### Description
 
-指定是否使用 fps 视频滤镜 `@danmaku:fps=fps=60/1.001`，可大幅提升弹幕平滑度。默认禁用
+Indique s’il faut utiliser le filtre vidéo fps `@danmaku:fps=fps=60/1.001`, qui peut améliorer considérablement la fluidité des danmaku. Désactivé par défaut
 
-注意该视频滤镜的性能开销较大，需在确保设备性能足够的前提下开启
+Ce filtre vidéo est toutefois très exigeant en ressources ; ne l’activez qu’après vous être assuré que les performances de votre appareil sont suffisantes
 
-启用选项后仅在视频帧率小于 60 及显示器刷新率大于等于 60 时生效
+Une fois l’option activée, elle ne prend effet que si la fréquence d’images de la vidéo est inférieure à 60 et si la fréquence de rafraîchissement de l’écran est supérieure ou égale à 60
 
-#### 使用方法
+#### Utilisation
 
-想要使用此选项，请在mpv配置文件夹下的 `script-opts`中创建 `uosc_danmaku.conf`文件并指定如下内容：
+Pour utiliser cette option, créez un fichier `uosc_danmaku.conf` dans le répertoire `script-opts` du dossier de configuration de mpv, puis indiquez le contenu suivant :
 
 ```
 vf_fps=yes
@@ -812,21 +812,21 @@ vf_fps=yes
 <summary>
 fps
 
-> 自定义fps滤镜参数适配不同显示器刷新率
+> Personnalise les paramètres du filtre fps en fonction de la fréquence de rafraîchissement de l’écran
 
 </summary>
 
 ### fps
 
-#### 功能说明
+#### Description
 
-指定要使用的 fps 滤镜参数，例如如果设置fps为 `60/1.001`，则实际生效的视频滤镜参数为 `@danmaku:fps=fps=60/1.001`
+Définit les paramètres du filtre fps à utiliser. Par exemple, si `fps` vaut `60/1.001`, le paramètre effectif du filtre vidéo sera `@danmaku:fps=fps=60/1.001`
 
-使用这个选项，可以根据自己显示器的刷新率调整要使用的视频滤镜参数
+Cette option permet d’adapter les paramètres du filtre vidéo à la fréquence de rafraîchissement de votre écran
 
-#### 使用方法
+#### Utilisation
 
-想要使用此选项，请在mpv配置文件夹下的 `script-opts`中创建 `uosc_danmaku.conf`文件并指定如下内容：
+Pour utiliser cette option, créez un fichier `uosc_danmaku.conf` dans le répertoire `script-opts` du dossier de configuration de mpv, puis indiquez le contenu suivant :
 
 ```
 fps=60/1.001
@@ -836,39 +836,39 @@ fps=60/1.001
 
 ---
 
-### 弹幕解析服务相关
+### Paramètres relatifs au service d’analyse des danmaku
 
-<!--  下列是弹幕解析服务相关  -->
+<!--  Les options suivantes concernent le service d’analyse des danmaku  -->
 
 <details>
 <summary>
 api_server
 
-> 自定义弹幕API
+> Personnalise l’API des danmaku
 
 </summary>
 
 ### api_server
 
-#### 功能说明
+#### Description
 
-允许自定义弹幕 API 的服务地址。默认使用项目维护的 `https://danmaku-api.152468.xyz`，由代理完成弹弹play API 鉴权，插件用户无需配置密钥。
+Permet de personnaliser l’adresse du service de l’API des danmaku. Par défaut, le service maintenu par le projet, `https://danmaku-api.152468.xyz`, est utilisé ; un proxy se charge de l’authentification auprès de l’API DanDanPlay, de sorte que les utilisateurs du module n’ont pas besoin de configurer de clé.
 
-可指定多个用逗号分隔的有序 api_server 列表（`有序`是指搜索结果将依据相同剧集 ID，在 api_server 中的顺序向前合并成一项）。
+Il est possible d’indiquer une liste ordonnée de plusieurs `api_server`, séparés par des virgules (`ordonnée` signifie que les résultats de recherche associés au même ID d’épisode seront regroupés en une seule entrée selon l’ordre des serveurs dans `api_server`).
 
-支持每项使用 '|' 或 '#' 分隔备注，例如: "https://a.example.com|备用A" 或 "https://b.example.com#备用B"
+Chaque entrée peut comporter une note séparée par « | » ou « # », par exemple : « https://a.example.com|SecoursA » ou « https://b.example.com#SecoursB »
 
-多 api_server 时搜索剧集，可以使用 ”剧集名称@server备注“ 的形式指定备注匹配 api_server 单一检索
+Lors d’une recherche d’épisode avec plusieurs `api_server`, vous pouvez utiliser la forme « nom de l’épisode@note du serveur » afin de limiter la recherche au seul `api_server` correspondant à cette note
 
-> **⚠️NOTE！**
+> **⚠️REMARQUE !**
 > 
-> 请确保自定义服务的 API 与弹弹play 的兼容，已知兼容：[misaka_danmu_server](https://github.com/l429609201/misaka_danmu_server)，[danmu_api](https://github.com/huangxd-/danmu_api)
+> Assurez-vous que l’API du service personnalisé est compatible avec celle de DanDanPlay. Compatibilités connues : [misaka_danmu_server](https://github.com/l429609201/misaka_danmu_server), [danmu_api](https://github.com/huangxd-/danmu_api)
 >
-> 通过默认 API 代理访问弹弹play时，无需配置弹弹play的 AppId/AppSecret；如需使用个人申请的弹弹play AppId/AppSecret 凭据，可以自行部署服务端代理，并将 `api_server` 指向该代理。
+> Aucun AppId/AppSecret DanDanPlay ne doit être configuré lorsque vous accédez à DanDanPlay par l’intermédiaire de l’API proxy par défaut. Pour utiliser des identifiants AppId/AppSecret DanDanPlay obtenus personnellement, vous pouvez déployer vous-même un proxy côté serveur et faire pointer `api_server` vers celui-ci.
 
-#### 使用方法
+#### Utilisation
 
-想要使用此选项，请在mpv配置文件夹下的 `script-opts`中创建 `uosc_danmaku.conf`文件并自定义如下内容：
+Pour utiliser cette option, créez un fichier `uosc_danmaku.conf` dans le répertoire `script-opts` du dossier de configuration de mpv, puis personnalisez son contenu comme suit :
 
 ```
 api_server=https://danmaku-api.152468.xyz
@@ -882,25 +882,25 @@ api_server=https://danmaku-api.152468.xyz
 <summary>
 fallback_server
 
-> 自定义b站和爱腾优的弹幕获取的兜底服务器地址
+> Personnalise l’adresse du serveur de secours utilisé pour récupérer les danmaku de Bilibili, iQIYI, Tencent Video et Youku
 
 </summary>
 
 ### fallback_server
 
-#### 功能说明
+#### Description
 
-自定义 b 站和爱腾优的弹幕获取的兜底服务器地址，主要用于获取非动画弹幕，只有在配置的所有 **`api_server`** 以及插件内置的 `站点专用解析器` 都无法解析视频源对应弹幕的情况下，才会使用此处设置的服务器进行解析。可用：https://dmku.hls.one
+Personnalise l’adresse du serveur de secours utilisé pour récupérer les danmaku de Bilibili, iQIYI, Tencent Video et Youku, principalement pour les contenus autres que les œuvres d’animation. Le serveur défini ici n’est utilisé pour l’analyse que si aucun des **`api_server`** configurés ni aucun des `analyseurs propres à chaque site` intégrés au module ne parvient à récupérer les danmaku correspondant à la source vidéo. Serveur disponible : https://dmku.hls.one
 
-> **⚠️NOTE！**
+> **⚠️REMARQUE !**
 >
-> 插件已在 `sites` 目录下内置了各大常规视频网站的弹幕站点专用解析器（[#377](https://github.com/Tony15246/uosc_danmaku/pull/377) [#380](https://github.com/Tony15246/uosc_danmaku/pull/380)），仅当专用解析器都无法解析获取站点弹幕时才会使用兜底服务器
+> Le module intègre déjà, dans le répertoire `sites`, des analyseurs de danmaku dédiés aux principaux sites vidéo ([#377](https://github.com/Tony15246/uosc_danmaku/pull/377) [#380](https://github.com/Tony15246/uosc_danmaku/pull/380)). Le serveur de secours n’est utilisé que si aucun de ces analyseurs dédiés ne parvient à récupérer les danmaku du site
 >
-> 不设置此选项的情况下默认使用 ` https://dmku.hls.one`作为兜底服务器
+> Si cette option n’est pas définie, ` https://dmku.hls.one` est utilisé par défaut comme serveur de secours
 
-#### 使用方法
+#### Utilisation
 
-想要使用此选项，请在mpv配置文件夹下的 `script-opts`中创建 `uosc_danmaku.conf`文件并自定义如下内容：
+Pour utiliser cette option, créez un fichier `uosc_danmaku.conf` dans le répertoire `script-opts` du dossier de configuration de mpv, puis personnalisez son contenu comme suit :
 
 ```
 fallback_server=https://dmku.hls.one
@@ -914,23 +914,23 @@ fallback_server=https://dmku.hls.one
 <summary>
 tmdb_api_key
 
-> 自定义 tmdb 的 API Key获取非动画条目的中文信息
+> Clé API TMDB personnalisée permettant d’obtenir les informations en chinois des œuvres qui ne sont pas des animes
 
 </summary>
 
 ### tmdb_api_key
 
-#### 功能说明
+#### Description
 
-设置 tmdb 的 API Key，用于获取非动画条目的中文信息(当搜索内容非中文时)。可以在 https://www.themoviedb.org 注册后去个人账号设置界面获取个人的tmdb 的 API Key。
+Définit la clé API TMDB utilisée pour obtenir les informations en chinois des œuvres qui ne sont pas des animes (lorsque le contenu recherché n’est pas en chinois). Vous pouvez vous inscrire sur https://www.themoviedb.org, puis récupérer votre clé API TMDB personnelle dans les paramètres de votre compte.
 
-> **⚠️NOTE！**
+> **⚠️REMARQUE !**
 > 
-> 不设置此选项的情况下默认使用专为本项目申请的API Key。另外，自定义此选项时还需要对获取到的 API Key 进行 base64 编码。
+> Si cette option n’est pas définie, la clé API demandée spécialement pour ce projet est utilisée par défaut. Par ailleurs, si vous personnalisez cette option, vous devez encoder en base64 la clé API obtenue.
 
-#### 使用方法
+#### Utilisation
 
-想要使用此选项，请在mpv配置文件夹下的 `script-opts`中创建 `uosc_danmaku.conf`文件并自定义如下内容：
+Pour utiliser cette option, créez un fichier `uosc_danmaku.conf` dans le dossier `script-opts` du répertoire de configuration de mpv, puis personnalisez-le comme suit :
 
 ```
 tmdb_api_key=NmJmYjIxOTZkNzIyN2UyMTIzMGM3Y2YzZjQ4MDNkZGM=
@@ -940,31 +940,31 @@ tmdb_api_key=NmJmYjIxOTZkNzIyN2UyMTIzMGM3Y2YzZjQ4MDNkZGM=
 
 ---
 
-### 插件配置相关
+### Configuration du plugin
 
 <details>
 <summary>
 user_agent
 
-> 自定义请求时的User Agent
+> Personnaliser le User-Agent des requêtes
 
 </summary>
 
 ### user_agent
 
-#### 功能说明
+#### Description
 
-自定义 `curl`发送网络请求时使用的 User Agent，默认值是 `mpv_danmaku/1.0`
+Personnalise le User-Agent utilisé par `curl` pour envoyer les requêtes réseau. La valeur par défaut est `mpv_danmaku/1.0`.
 
-#### 使用方法
+#### Utilisation
 
-想要使用此选项，请在mpv配置文件夹下的 `script-opts`中创建 `uosc_danmaku.conf`文件并自定义如下内容（不可为空）：
+Pour utiliser cette option, créez un fichier `uosc_danmaku.conf` dans le dossier `script-opts` du répertoire de configuration de mpv, puis personnalisez-le comme suit (la valeur ne peut pas être vide) :
 
-> **⚠️NOTE！**
+> **⚠️REMARQUE !**
 > 
-> 使用默认 API 代理时无需为弹弹play鉴权而修改 User-Agent。直接接入弹弹play官方 API 或其他自定义服务时，请遵循对应服务的 User-Agent 要求。
+> Lorsque vous utilisez le proxy d’API par défaut, il n’est pas nécessaire de modifier le User-Agent pour l’authentification auprès de Dandanplay. Si vous accédez directement à l’API officielle de Dandanplay ou à un autre service personnalisé, respectez les exigences de ce service concernant le User-Agent.
 > 
-> 若想提高URL播放的哈希匹配成功率，可以将此项设为 `mpv`或浏览器的User-Agent
+> Pour augmenter le taux de réussite de la correspondance par hachage lors de la lecture d’une URL, vous pouvez définir cette option sur `mpv` ou sur le User-Agent d’un navigateur.
 
 ```
 user_agent=mpv_danmaku/1.0
@@ -978,19 +978,19 @@ user_agent=mpv_danmaku/1.0
 <summary>
 proxy
 
-> 自定义请求时的代理
+> Personnaliser le proxy des requêtes
 
 </summary>
 
 ### proxy
 
-#### 功能说明
+#### Description
 
-自定义 `curl`发送网络请求时使用的代理，默认禁用
+Personnalise le proxy utilisé par `curl` pour envoyer les requêtes réseau. Il est désactivé par défaut.
 
-#### 使用方法
+#### Utilisation
 
-想要使用此选项，请在mpv配置文件夹下的 `script-opts`中创建 `uosc_danmaku.conf`文件并自定义如下内容：
+Pour utiliser cette option, créez un fichier `uosc_danmaku.conf` dans le dossier `script-opts` du répertoire de configuration de mpv, puis personnalisez-le comme suit :
 
 ```
 proxy=127.0.0.1:7890
@@ -1004,19 +1004,19 @@ proxy=127.0.0.1:7890
 <summary>
 message_x
 
-> 自定义插件相关提示的显示位置（x轴）
+> Personnaliser la position d’affichage des messages du plugin (axe x)
 
 </summary>
 
 ### message_x
 
-#### 功能说明
+#### Description
 
-自定义插件相关提示的显示位置，距离屏幕左上角的x轴的距离
+Personnalise la position d’affichage des messages du plugin, en définissant leur distance sur l’axe x à partir du coin supérieur gauche de l’écran.
 
-#### 使用方法
+#### Utilisation
 
-想要使用此选项，请在mpv配置文件夹下的 `script-opts`中创建 `uosc_danmaku.conf`文件并自定义如下内容：
+Pour utiliser cette option, créez un fichier `uosc_danmaku.conf` dans le dossier `script-opts` du répertoire de configuration de mpv, puis personnalisez-le comme suit :
 
 ```
 message_x=30
@@ -1030,19 +1030,19 @@ message_x=30
 <summary>
 message_y
 
-> 自定义插件相关提示的显示位置（y轴）
+> Personnaliser la position d’affichage des messages du plugin (axe y)
 
 </summary>
 
 ### message_y
 
-#### 功能说明
+#### Description
 
-自定义插件相关提示的显示位置，距离屏幕左上角的y轴的距离
+Personnalise la position d’affichage des messages du plugin, en définissant leur distance sur l’axe y à partir du coin supérieur gauche de l’écran.
 
-#### 使用方法
+#### Utilisation
 
-想要使用此选项，请在mpv配置文件夹下的 `script-opts`中创建 `uosc_danmaku.conf`文件并自定义如下内容：
+Pour utiliser cette option, créez un fichier `uosc_danmaku.conf` dans le dossier `script-opts` du répertoire de configuration de mpv, puis personnalisez-le comme suit :
 
 ```
 message_y=30
@@ -1056,17 +1056,17 @@ message_y=30
 <summary>
 title_replace
 
-> 自定义文件标题解析中的额外替换规则
+> Personnaliser les règles de remplacement supplémentaires lors de l’analyse du titre de fichier
 
 </summary>
 
 ### title_replace
 
-自定义标题解析中的额外替换规则，内容格式为 JSON 字符串，替换模式为 lua 的 string.gsub 函数
+Personnalise les règles de remplacement supplémentaires lors de l’analyse du titre. Le contenu est une chaîne JSON et le remplacement utilise la fonction `string.gsub` de Lua.
 
-注意⚠️：由于 mpv 的 lua 版本限制，自定义规则只支持形如 %n 的捕获组写法，即示例用法，不支持直接替换字符的写法
+Attention ⚠️ : en raison des limitations de la version de Lua intégrée à mpv, les règles personnalisées prennent uniquement en charge les groupes de capture de la forme %n, comme dans l’exemple. Le remplacement direct de caractères n’est pas pris en charge.
 
-用法示例：
+Exemple d’utilisation :
 
 ```
 title_replace=[{"rules":[{ "^〔(.-)〕": "%1"},{ "^.*《(.-)》": "%1" }]}]
@@ -1080,15 +1080,15 @@ title_replace=[{"rules":[{ "^〔(.-)〕": "%1"},{ "^.*《(.-)》": "%1" }]}]
 <summary>
 excluded_path
 
-> 指定哈希匹配中需忽略的共享盘（挂载盘）的路径/目录
+> Spécifier les chemins ou répertoires des lecteurs partagés (lecteurs montés) à ignorer lors de la correspondance par hachage
 
 </summary>
 
 ### excluded_path
 
-指定哈希匹配中需忽略的共享盘（挂载盘）的路径/目录。支持绝对路径和相对路径，多个路径用逗号分隔
+Spécifie les chemins ou répertoires des lecteurs partagés (lecteurs montés) à ignorer lors de la correspondance par hachage. Les chemins absolus et relatifs sont pris en charge ; séparez plusieurs chemins par des virgules.
 
-用法示例：
+Exemple d’utilisation :
 
 ```
 excluded_path=["X:", "Z:", "F:/Download/", "Download"]
@@ -1102,22 +1102,22 @@ excluded_path=["X:", "Z:", "F:/Download/", "Download"]
 <summary>
 history_path
 
-> 指定弹幕关联历史记录文件路径
+> Spécifier le chemin du fichier d’historique des associations de danmaku
 
 </summary>
 
 ### history_path
 
-#### 功能说明
+#### Description
 
-指定弹幕关联历史记录文件的路径，支持绝对路径和相对路径。默认值是 `~~/danmaku-history.json`也就是mpv配置文件夹的根目录下
+Spécifie le chemin du fichier d’historique des associations de danmaku. Les chemins absolus et relatifs sont pris en charge. La valeur par défaut est `~~/danmaku-history.json`, c’est-à-dire la racine du répertoire de configuration de mpv.
 
-#### 使用示例
+#### Exemple d’utilisation
 
-想要配置此选项，请在mpv配置文件夹下的 `script-opts`中创建 `uosc_danmaku.conf`文件并添加类似如下内容：
+Pour configurer cette option, créez un fichier `uosc_danmaku.conf` dans le dossier `script-opts` du répertoire de configuration de mpv, puis ajoutez-y un contenu semblable au suivant :
 
 > **⚠️IMPORTANT**
-> 不要直接复制这里的配置，这只是一个示例，路径要写成真实存在的路径。此选项可以不配置，脚本会默认放在mpv配置文件夹的根目录下。
+> Ne copiez pas directement cette configuration : il ne s’agit que d’un exemple et le chemin doit correspondre à un chemin existant. Cette option est facultative ; par défaut, le script place le fichier à la racine du répertoire de configuration de mpv.
 
 ```
 history_path=/path/to/your/danmaku-history.json
@@ -1127,92 +1127,92 @@ history_path=/path/to/your/danmaku-history.json
 
 ---
 
-### 自定义弹幕样式相关配置
+### Configuration personnalisée du style des danmaku
 
-默认配置如下，可根据需求更改并自定义弹幕样式
+La configuration par défaut est indiquée ci-dessous. Vous pouvez la modifier selon vos besoins afin de personnaliser le style des danmaku.
 
-想要配置此选项，请在mpv配置文件夹下的 `script-opts`中创建 `uosc_danmaku.conf`文件并添加类似如下内容：
+Pour configurer ces options, créez un fichier `uosc_danmaku.conf` dans le dossier `script-opts` du répertoire de configuration de mpv, puis ajoutez-y un contenu semblable au suivant :
 
 ```
-#滚动弹幕的显示时间
+#Durée d’affichage des danmaku défilants
 scrolltime=15
-#固定弹幕的显示时间
+#Durée d’affichage des danmaku fixes
 fixtime=5
-#字体(名称两边不需要使用引号""括住)
+#Police (inutile d’entourer le nom de guillemets "")
 fontname=sans-serif
-#大小
+#Taille
 fontsize=50
-#阴影
+#Ombre
 shadow=0
-#粗体
+#Gras
 bold=yes
-#全部弹幕的显示范围(0.0-1.0)
+#Zone d’affichage de l’ensemble des danmaku (0.0-1.0)
 displayarea=0.85
-#描边 0-4
+#Contour 0-4
 outline=1
-#指定弹幕屏蔽词文件路径(black.txt)，支持绝对路径和相对路径。文件内容以换行分隔
-##支持 lua 的正则表达式写法
+#Chemin du fichier de mots à bloquer dans les danmaku (black.txt) ; les chemins absolus et relatifs sont pris en charge. Séparez les entrées par des sauts de ligne
+##La syntaxe des expressions régulières de Lua est prise en charge
 blacklist_path=
 ```
 
-## 插件自定义属性
+## Propriétés personnalisées du plugin
 
 - `user-data/uosc_danmaku/danmaku-delay`
 
-    从 `user-data/uosc_danmaku/danmaku-delay`属性中可以获取到当前弹幕延迟的值，具体用法可以参考[此issue](https://github.com/Tony15246/uosc_danmaku/issues/77)
+    La propriété `user-data/uosc_danmaku/danmaku-delay` permet d’obtenir la valeur actuelle du décalage des danmaku. Pour un exemple concret, consultez [cette issue](https://github.com/Tony15246/uosc_danmaku/issues/77).
 
 - `user-data/uosc_danmaku/has-danmaku`
 
-    从`user-data/uosc_danmaku/has-danmaku`属性中可以获取到表示当前是否有弹幕在显示的布尔值，具体用法可以参考[此pr](https://github.com/Tony15246/uosc_danmaku/pull/276)
+    La propriété `user-data/uosc_danmaku/has-danmaku` permet d’obtenir une valeur booléenne indiquant si des danmaku sont actuellement affichés. Pour un exemple concret, consultez [cette PR](https://github.com/Tony15246/uosc_danmaku/pull/276).
 
 - `user-data/uosc_danmaku/danmaku-switch-on`
 
-    从`user-data/uosc_danmaku/danmaku-switch-on`属性中可以获取到表示当前弹幕开关状态的布尔值，具体用法可以参考[此issue](https://github.com/Tony15246/uosc_danmaku/issues/362)
+    La propriété `user-data/uosc_danmaku/danmaku-switch-on` permet d’obtenir une valeur booléenne indiquant l’état actuel de l’interrupteur des danmaku. Pour un exemple concret, consultez [cette issue](https://github.com/Tony15246/uosc_danmaku/issues/362).
 
 - `user-data/uosc_danmaku/danmaku-count`
 
-    从`user-data/uosc_danmaku/danmaku-count`属性中可以获取到当前弹幕池里的弹幕总数
+    La propriété `user-data/uosc_danmaku/danmaku-count` permet d’obtenir le nombre total de danmaku présents dans le pool actuel.
 
-## 常见问题
+## Questions fréquentes
 
-### 来自弹弹play的弹幕源问题如何从根源进行调整解决
+### Comment corriger à la source les problèmes liés aux sources de danmaku provenant de Dandanplay
 
-本插件动画弹幕均来自[弹弹play api](https://github.com/kaedei/dandanplay-libraryindex/blob/master/api/OpenPlatform.md)，所以你可能会遇到 `部分动画没有弹幕`和 `弹幕时间轴对不上`这类问题，虽然你可以使用本插件的 [从源获取弹幕](#从弹幕源向当前弹幕添加新弹幕内容可选) 和 [弹幕源延迟设置](#弹幕源延迟设置可选) 这两个功能解决，但你如果想为弹幕源做贡献从根源解决帮所有用户解决这类问题，可以参考下列教程:
+Tous les danmaku d’animes utilisés par ce plugin proviennent de l’[API Dandanplay](https://github.com/kaedei/dandanplay-libraryindex/blob/master/api/OpenPlatform.md). Vous pouvez donc rencontrer des problèmes tels que `certains animes n’ont pas de danmaku` ou `la chronologie des danmaku n’est pas synchronisée`. Vous pouvez les résoudre à l’aide des fonctions [Obtenir des danmaku depuis une source](#ajouter-de-nouveaux-danmaku-depuis-une-source-facultatif) et [Régler le décalage d’une source de danmaku](#réglage-du-décalage-des-sources-de-danmaku-facultatif) de ce plugin. Toutefois, si vous souhaitez contribuer aux sources afin de résoudre ces problèmes à la racine pour l’ensemble des utilisateurs, suivez le tutoriel ci-dessous :
 
-1.下载[弹弹play pc端](https://www.dandanplay.com)
+1. Téléchargez l’[application Dandanplay pour PC](https://www.dandanplay.com).
 
-2.使用弹弹play `播放任意视频文件`并 `绑定你想要调整的动画弹幕库`
+2. Dans Dandanplay, `lisez n’importe quel fichier vidéo`, puis `associez-le à la bibliothèque de danmaku de l’anime que vous souhaitez corriger`.
 
-3.然后就可以参考下方详细教程对弹幕源进行操作并使所有用户同步操作内容了
+3. Suivez ensuite le tutoriel détaillé ci-dessous pour modifier la source de danmaku et synchroniser ces changements pour tous les utilisateurs.
 
-**为动画添加弹幕源**
+**Ajouter une source de danmaku à un anime**
 
-如果你想为一部动画添加弹幕可以使用 `视频设置菜单`-→`弹幕列表`-→`添加更多弹幕` 这项功能添加对应的弹幕
+Pour ajouter des danmaku à un anime, utilisez la fonction `Menu des paramètres vidéo` → `Liste des danmaku` → `Ajouter davantage de danmaku` afin d’ajouter les danmaku correspondants.
 
 > [!NOTE]
-> 如果想使API（本插件）弹幕同步操作内容请将链接重复添加三次（弹弹play投票抉择机制）
+> Pour que les modifications soient répercutées dans les danmaku de l’API (et donc de ce plugin), ajoutez trois fois le même lien, conformément au mécanisme de vote de Dandanplay.
 
-**为动画弹幕源调整延迟**
+**Régler le décalage d’une source de danmaku d’un anime**
 
-如果你想为动画弹幕源修改延迟，请在 `视频设置菜单`-→`编辑弹幕来源`中复制下你要编辑的弹幕源的具体网址，然后点击删除，然后使用 `视频设置菜单`-→`弹幕列表`-→`添加更多弹幕` 这项功能进行重新添加，添加时在下方 `已选弹幕`中更改 `弹幕偏移`（单位为秒）调整延迟，然后依旧是重复添加三次就能使API弹幕同步了
+Pour modifier le décalage d’une source de danmaku d’un anime, ouvrez `Menu des paramètres vidéo` → `Modifier les sources de danmaku`, puis copiez l’URL exacte de la source à modifier et supprimez-la. Utilisez ensuite la fonction `Menu des paramètres vidéo` → `Liste des danmaku` → `Ajouter davantage de danmaku` pour l’ajouter de nouveau. Lors de l’ajout, modifiez le `Décalage des danmaku` (en secondes) sous `Danmaku sélectionnés`, puis ajoutez à nouveau la source trois fois pour que les danmaku de l’API soient synchronisés.
 
-另外，弹弹play的弹幕源一直是人工维护人工绑定制，感谢所有用此方式做贡献的人
+Par ailleurs, les sources de danmaku de Dandanplay sont depuis toujours maintenues et associées manuellement. Merci à toutes les personnes qui contribuent de cette manière.
 
-## 特别感谢
+## Remerciements particuliers
 
-感谢以下项目为本项目提供了实现参考或者外部依赖
+Merci aux projets suivants, qui ont servi de référence pour l’implémentation ou fourni des dépendances externes à ce projet :
 
-- 弹幕api：[弹弹play](https://github.com/kaedei/dandanplay-libraryindex/blob/master/api/OpenPlatform.md)
-- 菜单api：[uosc](https://github.com/tomasklaen/uosc)
-- 弹幕格式解析转换：[DanmakuConvert](https://github.com/timerring/DanmakuConvert)
-- 简繁转换：[OpenCC](https://github.com/BYVoid/OpenCC)
-- lua原生md5计算实现：https://github.com/rkscv/danmaku
-- lua原生zip解压缩实现：[lua-inflate](https://github.com/TohruMKDM/lua-inflate)
-- 爱优腾及芒果TV的弹幕解析参考：https://github.com/lyz05/danmaku
-- b站在线播放弹幕获取实现参考：[MPV-Play-BiliBili-Comments](https://github.com/itKelis/MPV-Play-BiliBili-Comments)
-- 巴哈姆特在线播放弹幕获取实现参考：[MPV-Play-BAHA-Comments](https://github.com/s594569321/MPV-Play-BAHA-Comments)
+- API de danmaku : [Dandanplay](https://github.com/kaedei/dandanplay-libraryindex/blob/master/api/OpenPlatform.md)
+- API de menus : [uosc](https://github.com/tomasklaen/uosc)
+- Analyse et conversion des formats de danmaku : [DanmakuConvert](https://github.com/timerring/DanmakuConvert)
+- Conversion entre chinois traditionnel et simplifié : [OpenCC](https://github.com/BYVoid/OpenCC)
+- Implémentation native en Lua du calcul MD5 : https://github.com/rkscv/danmaku
+- Implémentation native en Lua de la décompression ZIP : [lua-inflate](https://github.com/TohruMKDM/lua-inflate)
+- Référence pour l’analyse des danmaku d’iQIYI, Youku, Tencent Video et Mango TV : https://github.com/lyz05/danmaku
+- Référence pour la récupération des danmaku lors de la lecture en ligne sur Bilibili : [MPV-Play-BiliBili-Comments](https://github.com/itKelis/MPV-Play-BiliBili-Comments)
+- Référence pour la récupération des danmaku lors de la lecture en ligne sur Bahamut : [MPV-Play-BAHA-Comments](https://github.com/s594569321/MPV-Play-BAHA-Comments)
 
-## 相关项目
+## Projets associés
 
-- [slqy123/uosc_danmaku](https://github.com/slqy123/uosc_danmaku) 本项目的fork版本，实现了通过dandanplay api发送弹幕的功能，由于版本的兼容性以及功能的易用性问题未被合并，具体讨论请参阅 [#220](https://github.com/Tony15246/uosc_danmaku/pull/220)
-- ~~[Loukyuu1120/uosc_danmaku](https://github.com/Loukyuu1120/uosc_danmaku) 本项目的fork版本，实现了自定义多个 api_servers 与 弹幕来源选择菜单 功能，具体讨论请参阅 [#282](https://github.com/Tony15246/uosc_danmaku/issues/282)~~ 相关功能主仓库已实现
+- [slqy123/uosc_danmaku](https://github.com/slqy123/uosc_danmaku) est un fork de ce projet qui permet d’envoyer des danmaku via l’API Dandanplay. Il n’a pas été fusionné en raison de problèmes de compatibilité entre les versions et de facilité d’utilisation. Consultez [#220](https://github.com/Tony15246/uosc_danmaku/pull/220) pour plus de détails.
+- ~~[Loukyuu1120/uosc_danmaku](https://github.com/Loukyuu1120/uosc_danmaku) est un fork de ce projet qui permet de définir plusieurs `api_servers` personnalisés et propose un menu de sélection des sources de danmaku. Consultez [#282](https://github.com/Tony15246/uosc_danmaku/issues/282) pour plus de détails.~~ Ces fonctionnalités ont depuis été intégrées au dépôt principal.

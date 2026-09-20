@@ -33,7 +33,7 @@ local function get_type_from_position(position)
     return 5
 end
 
--- 为 bahamut 网站的视频播放加载弹幕
+-- Charge les danmaku des vidéos Bahamut
 function load_danmaku_for_bahamut(path, callback)
     callback = callback or function() end
     local path = path:gsub('%%(%x%x)', hex_to_char)
@@ -80,7 +80,7 @@ function load_danmaku_for_bahamut(path, callback)
 
     call_cmd_async(arg, function(error)
         if error then
-            show_message("HTTP 请求失败，打开控制台查看详情", 5)
+            show_message("Échec de la requête HTTP ; consultez la console", 5)
             msg.error(error)
             callback(false)
             return

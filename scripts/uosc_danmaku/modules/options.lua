@@ -1,95 +1,95 @@
 local opt = require("mp.options")
 
--- 选项
+-- Options
 options = {
-    -- 指定弹幕服务器地址，自定义服务需兼容 dandanplay 的 api
-    -- 可指定多个用逗号分隔的有序 api_server 列表
-    -- 支持每项使用 '|' 或 '#' 分隔备注，例如: "https://a.example.com|备用A" 或 "https://b.example.com#备用B"
+    -- Définit l'adresse du serveur de danmaku ; un service personnalisé doit être compatible avec l'API dandanplay
+    -- Accepte une liste ordonnée de api_server séparés par des virgules
+    -- Chaque entrée peut porter une note séparée par « | » ou « # »
     api_server = "https://danmaku-api.152468.xyz",
-    -- 指定 b 站和爱腾优的弹幕获取的兜底服务器地址，主要用于获取非动画弹幕
-    -- 可用： https://dmku.hls.one
+    -- Définit le serveur de secours pour Bilibili, iQIYI, Tencent et Youku, principalement pour les contenus non animés
+    -- Disponible : https://dmku.hls.one
     fallback_server = "https://dmku.hls.one",
-    -- 设置 tmdb 的 API Key，用于获取非动画条目的中文信息(当搜索内容非中文时)
-    -- 可以在 https://www.themoviedb.org 注册后去个人账号设置界面获取
-    -- 注意：自定义此参数时还需要对获取到的 API Key 进行 base64 编码
+    -- Définit la clé API TMDB pour obtenir les informations chinoises des contenus non animés lorsque la recherche n'est pas en chinois
+    -- Disponible dans les paramètres du compte après inscription sur https://www.themoviedb.org
+    -- Attention : une clé personnalisée doit être encodée en base64
     tmdb_api_key = "NmJmYjIxOTZkNzIyN2UyMTIzMGM3Y2YzZjQ4MDNkZGM=",
-    -- 自动加载弹幕开关
+    -- Active le chargement automatique des danmaku
     auto_load = false,
-    -- 自动加载可能支持的 url 视频文件实现弹幕关联记忆和继承，配合播放列表食用效果最佳
+    -- Mémorise et réutilise les associations de danmaku pour les URL vidéo compatibles ; fonctionne au mieux avec les listes de lecture
     autoload_for_url = false,
-    -- 当自动弹幕加载失败时，自动弹出搜索框让用户手动搜索
+    -- Ouvre automatiquement la recherche manuelle si le chargement automatique échoue
     auto_fallback_search = false,
-    -- 自动加载播放文件同目录下同名的 xml 格式的弹幕文件
+    -- Charge automatiquement le fichier XML de même nom situé avec la vidéo
     autoload_local_danmaku = false,
-    -- 播放结束时自动保存弹幕为xml文件
+    -- Enregistre automatiquement les danmaku en XML à la fin de la lecture
     save_danmaku = false,
-    -- 指定弹幕保存目录。为空时保存到视频同目录；目录需要用户提前创建
+    -- Définit le dossier d'enregistrement ; vide, utilise le dossier de la vidéo. Le dossier doit déjà exister
     save_danmaku_path = "",
-    -- 指定 save_danmaku_path 的应用范围：local / url / all
+    -- Définit la portée de save_danmaku_path : local / url / all
     save_danmaku_path_mode = "local",
-    -- 向 HTTP 请求时使用的 User Agent
+    -- User-Agent des requêtes HTTP
     user_agent = "mpv_danmaku/1.0",
-    -- 可选：向 HTTP 请求时使用的代理，默认禁用
+    -- Mandataire facultatif pour les requêtes HTTP, désactivé par défaut
     proxy = "",
-    -- 可选：向 HTTP 请求传递 cookie.txt 文件路径
+    -- Chemin facultatif du fichier cookie.txt transmis aux requêtes HTTP
     cookie_file = "",
-    -- 使用 fps 视频滤镜，大幅提升弹幕平滑度。默认禁用
+    -- Utilise le filtre vidéo fps pour fluidifier les danmaku ; désactivé par défaut
     vf_fps = false,
-    -- 设置要使用的 fps 滤镜参数
+    -- Définit le paramètre du filtre fps
     fps = "60/1.001",
-    -- 指定合并重复弹幕的时间间隔的容差值，单位为秒。默认值: -1，表示禁用
+    -- Tolérance temporelle en secondes pour fusionner les doublons ; -1 désactive la fusion
     merge_tolerance = -1,
-    -- 合并重复弹幕时是否强制合并类型和颜色不同的弹幕。默认值: false，表示仅合并类型和颜色相同的弹幕
+    -- Indique si les doublons de types ou couleurs différents doivent être fusionnés ; false limite la fusion aux styles identiques
     merge_without_style = false,
-    -- 合并弹幕字号的对数增长系数，必须为正整数
+    -- Coefficient logarithmique d'agrandissement des danmaku fusionnés ; entier positif
     merge_fontsize_growth = 8,
-    -- 合并弹幕允许使用的最大字号
+    -- Taille maximale des danmaku fusionnés
     merge_fontsize_max = 100,
-    -- 指定弹幕关联历史记录文件的路径，支持绝对路径和相对路径
+    -- Chemin absolu ou relatif du fichier d'historique des associations
     history_path = "~~/danmaku-history.json",
-    -- 自定义插件快捷键，若 mpv.conf 里设置 input-default-bindings=no 将禁用以下两个选项
+    -- Raccourcis personnalisés ; input-default-bindings=no dans mpv.conf désactive les deux options suivantes
     open_search_danmaku_menu_key = "Ctrl+d",
     show_danmaku_keyboard_key = "j",
-    -- 中文简繁转换。0-不转换，1-转换为简体，2-转换为繁体
+    -- Conversion chinois traditionnel/simplifié : 0 aucune, 1 simplifié, 2 traditionnel
     chConvert = 0,
-    --滚动弹幕的显示时间
+    -- Durée d'affichage des danmaku défilants
     scrolltime = 15,
-    --固定弹幕的显示时间
+    -- Durée d'affichage des danmaku fixes
     fixtime = 5,
-    --字体
+    -- Police
     fontname = "sans-serif",
-    --字体大小 
+    -- Taille de police
     fontsize = 50,
-    --字体阴影
+    -- Ombre de la police
     shadow = 0,
-    --字体粗体
+    -- Police en gras
     bold = true,
-    -- 透明度：0（完全透明）到 1（不透明）
+    -- Opacité : 0 (transparent) à 1 (opaque)
     opacity = 0.7,
-    --全部弹幕的显示范围(0.0-1.0)
+    -- Zone d’affichage de tous les danmaku (0,0–1,0)
     displayarea = 0.85,
-    --描边 0-4
+    -- Contour de 0 à 4
     outline = 1.0,
-    -- 限制屏幕中同时显示的最大弹幕数量，0 表示不限制
+    -- Nombre maximal de danmaku simultanés ; 0 signifie illimité
     max_screen_danmaku = 0,
-    --指定弹幕屏蔽词文件路径(black.txt)，支持绝对路径和相对路径。文件内容以换行分隔
-    --支持 lua 的正则表达式写法
+    -- Chemin absolu ou relatif du fichier de mots bloqués (black.txt), une entrée par ligne
+    -- Accepte les motifs Lua
     blacklist_path = "",
-    --指定脚本相关消息显示的消息的对齐方式
+    -- Alignement des messages du script
     message_anlignment = 7,
-    --指定脚本相关消息显示的消息的x轴坐标
+    -- Coordonnée x des messages du script
     message_x = 30,
-    --指定脚本相关消息显示的消息的y轴坐标
+    -- Coordonnée y des messages du script
     message_y = 30,
-    -- 自定义标题解析中的额外替换规则，内容格式为 JSON 字符串，替换模式为 lua 的 string.gsub 函数
-    --! 注意：由于 mpv 的 lua 版本限制，自定义规则只支持形如 %n 的捕获组写法，即示例用法，不支持直接替换字符的写法
+    -- Règles supplémentaires de remplacement des titres, au format JSON, utilisant les motifs de string.gsub de Lua
+    --! Attention : la version Lua de mpv n'accepte ici que les captures de forme %n, comme dans l'exemple
     title_replace = [[
        [{ 
            "rules": [{ "^〔(.-)〕": "%1"},{ "^.*《(.-)》": "%1" }],
        }]
     ]],
-    -- 指定哈希匹配中需忽略的共享盘（挂载盘）的路径/目录。支持绝对路径和相对路径，多个路径用逗号分隔
-    -- 示例：["X:", "Z:", "F:/Download/", "Download"]
+    -- Chemins absolus ou relatifs de volumes partagés à exclure de la correspondance par hachage, séparés par des virgules
+    -- Exemple : ["X:", "Z:", "F:/Download/", "Download"]
     excluded_path = [[
         []
     ]],

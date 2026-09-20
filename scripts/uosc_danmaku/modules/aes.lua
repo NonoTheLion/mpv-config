@@ -1,4 +1,4 @@
--- modified from https://github.com/idiomic/Lua_AES
+-- Adapté de https://github.com/idiomic/Lua_AES
 --[[
     Copyright 2019 Tyler Richard Hoyer
     Copyright 2025 dyphire
@@ -267,7 +267,7 @@ local function mixColumns(state)
     end
 end
 
-local function inv_mixColumns(state) -- TODO: fix
+local function inv_mixColumns(state) -- À corriger
     for i = 0, 3 do
         local cur = i*4+1
         local a, b, c, d = state[cur], state[cur + 1], state[cur + 2], state[cur + 3]
@@ -278,9 +278,9 @@ local function inv_mixColumns(state) -- TODO: fix
     end
 end
 
--- 256-bit key constants
-local n = 32 -- number of bytes in the 256-bit encryption key
-local b = 240 -- number of bytes in 15 128-bit round keys
+-- Constantes de la clé 256 bits
+local n = 32 -- Nombre d'octets de la clé de chiffrement 256 bits
+local b = 240 -- Nombre d'octets des 15 clés de ronde 128 bits
 local function schedule256(key)
     local expanded = {}
     for c = 0, n-1 do

@@ -24,7 +24,7 @@ local options = require "mp.options"
 ---- Script Options ----
 local o = {
     ffmpeg_path = "ffmpeg",
-    -- eng=English, chs=Chinese
+    -- eng=anglais, chs=français
     language = "eng",
 }
 
@@ -63,8 +63,8 @@ local function export_selected_subtitles()
         if track_type == "sub" and track_selected == "yes" then
             if track_external == "yes" then
                 if o.language == 'chs' then
-                    msg.info("错误:已选择外部字幕")
-                    mp.osd_message("错误:已选择外部字幕", 2)
+                    msg.info("Erreur : des sous-titres externes sont sélectionnés")
+                    mp.osd_message("Erreur : des sous-titres externes sont sélectionnés", 2)
                 else
                     msg.info("Error: external subtitles have been selected")
                     mp.osd_message("Error: external subtitles have been selected", 2)
@@ -96,8 +96,8 @@ local function export_selected_subtitles()
             end
 
             if o.language == 'chs' then
-                msg.info("正在导出当前字幕")
-                mp.osd_message("正在导出当前字幕")
+                msg.info("Exportation des sous-titres sélectionnés")
+                mp.osd_message("Exportation des sous-titres sélectionnés")
             else
                 msg.info("Exporting selected subtitles")
                 mp.osd_message("Exporting selected subtitles")
@@ -126,8 +126,8 @@ function process()
     mp.set_osd_ass(screenx, screeny, "")
     if res.status == 0 then
         if o.language == 'chs' then
-            msg.info("当前字幕已导出")
-            mp.osd_message("当前字幕已导出")
+            msg.info("Exportation des sous-titres terminée")
+            mp.osd_message("Exportation des sous-titres terminée")
         else
             msg.info("Finished exporting subtitles")
             mp.osd_message("Finished exporting subtitles")
@@ -136,8 +136,8 @@ function process()
         mp.set_property("sub-visibility", "yes")
     else
         if o.language == 'chs' then
-            msg.info("当前字幕导出失败")
-            mp.osd_message("当前字幕导出失败, 查看控制台获取更多信息.")
+            msg.info("Échec de l'exportation des sous-titres")
+            mp.osd_message("Échec de l'exportation des sous-titres ; consultez la console pour plus d'informations.")
         else
             msg.info("Failed to export subtitles")
             mp.osd_message("Failed to export subtitles, check console for more info.")
