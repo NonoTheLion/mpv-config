@@ -14,18 +14,13 @@
   {
     "git":"https://github.com/dyphire/mpv-scripts",
     "branch":"main",
-    "blacklist":"LICENSE|README.*%.md$|drcbox%.lua$|.-%-list%.lua$",
+    "blacklist":"LICENSE|README.*%.md$|drcbox%.lua$|.-%-list%.lua$|open_dialog%.lua$|mpv%-torrserver%.lua$|hdr%-mode%.lua$|display%-info%.dll$",
     "dest":"~~/scripts"
   },
   {
     "git":"https://github.com/dyphire/mpv-playlistmanager",
     "branch":"dev",
     "whitelist":"playlistmanager%.lua$",
-    "dest":"~~/scripts"
-  },
-  {
-    "git":"https://github.com/dyphire/mpv-sub-assrt",
-    "whitelist":"%.lua$",
     "dest":"~~/scripts"
   },
   {
@@ -52,12 +47,6 @@
     "dest":"~~/scripts/autosubsync"
   },
   {
-    "git":"https://github.com/open-dynaMIX/simple-mpv-webui",
-    "branch":"main",
-    "whitelist":"readme%.md$|main%.lua$|webui%-page",
-    "dest":"~~/scripts/simple-mpv-webui"
-  },
-  {
     "git":"https://github.com/christoph-heinrich/mpv-quality-menu",
     "whitelist":"qualityu%-menu%.lua$",
     "dest":"~~/scripts"
@@ -65,6 +54,7 @@
   {
     "git":"https://github.com/CogentRedTester/mpv-file-browser",
     "whitelist":"main%.lua$|readme%.md$|doc|modules",
+    "blacklist":"windir%.lua$|winroot%.lua$",
     "dest":"~~/scripts/file-browser"
   },
   {
@@ -74,7 +64,7 @@
   },
   {
     "git":"https://github.com/CogentRedTester/mpv-file-browser",
-    "whitelist":"favourites%.lua$|find%.lua$|home%-label%.lua$|url%-decode%.lua$|windir%.lua$|winroot%.lua$",
+    "whitelist":"favourites%.lua$|find%.lua$|home%-label%.lua$|url%-decode%.lua$",
     "dest":"~~/script-modules/file-browser-addons"
   },
   {

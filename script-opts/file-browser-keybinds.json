@@ -182,12 +182,5 @@
             ["script-message", "favourites/move_down", "%f"]
         ],
         "parser": "favourites"
-    },
-    {
-        "key": "Ctrl+r",
-        "command": [
-            ["script-message", "winroot/import_root_drives"]
-        ],
-        "parser": "root"
     }
 ]

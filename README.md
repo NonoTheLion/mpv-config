@@ -1,6 +1,6 @@
 # mpv-config — fork français et personnalisé
 
-Ce dépôt est un fork de [dyphire/mpv-config](https://github.com/dyphire/mpv-config), adapté pour proposer une configuration mpv francophone, cohérente et utilisable principalement sous Linux.
+Ce dépôt est un fork de [dyphire/mpv-config](https://github.com/dyphire/mpv-config), adapté pour proposer une configuration mpv francophone, cohérente et exclusivement destinée à Linux.
 
 Il ne s’agit pas d’un miroir ni d’une traduction figée à l’identique. Le projet source sert de base technique et continue d’alimenter ce fork, mais les mises à jour sont intégrées de manière sélective. Les valeurs par défaut, les raccourcis, les scripts retenus et certains choix d’interface peuvent donc volontairement diverger de l’amont.
 
@@ -37,7 +37,8 @@ Cette approche signifie que deux versions contemporaines des dépôts amont et f
 - priorité aux sous-titres français, puis anglais ;
 - rendu des polices par Fontconfig et police `Noto Sans` ;
 - menus uosc, messages et principaux commentaires traduits en français ;
-- raccourcis clavier et souris adaptés à l’usage de ce fork.
+- raccourcis clavier et souris adaptés à un clavier AZERTY sous Linux ;
+- suppression des scripts Windows, des services chinois, de la WebUI, de TorrServer et des anciens composants archivés.
 
 La configuration détaillée et les explications de chaque option se trouvent dans `mpv.conf`, `input.conf`, `inputevent_key.conf` et le dossier `script-opts`.
 
@@ -57,9 +58,9 @@ Exemple de sauvegarde :
 cp -a ~/.config/mpv ~/.config/mpv.backup
 ```
 
-### Windows
+### Autres systèmes
 
-Le fork reste en partie compatible avec Windows, mais ses valeurs par défaut ciblent Linux. Pour l’utiliser sous Windows, il faut au minimum revoir les options graphiques, audio, IPC et les chemins. Le projet source reste préférable pour une configuration Windows prête à l’emploi.
+Ce fork ne cherche plus à prendre en charge Windows. Pour ce système, utilisez de préférence le projet source.
 
 ## État du travail
 
@@ -77,7 +78,6 @@ La francisation couvre la configuration principale, les menus, de nombreux scrip
 - intégrer régulièrement les changements pertinents du dépôt source ;
 - consigner plus clairement les divergences fonctionnelles avec l’amont ;
 - vérifier la compatibilité avec les nouvelles versions de mpv, uosc et des scripts inclus ;
-- simplifier progressivement les réglages encore trop liés à Windows ;
 - préparer, lorsque l’ensemble sera suffisamment stable, des versions faciles à installer et à mettre à jour.
 
 ## Projet source et références
